@@ -7,7 +7,6 @@ use App\Models\Device;
 use App\Services\CurrentRrdMetricService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
-use LibreNMS\Data\Store\Rrd;
 
 class DeviceCurrentMetricController extends Controller
 {
@@ -39,7 +38,7 @@ class DeviceCurrentMetricController extends Controller
         $samples = [];
         foreach (self::CPU_STATES as $state => $rrdName) {
             $samples[$state] = $this->metrics->latestAverage(
-                Rrd::name($device->hostname, 'ucd_' . $rrdName),
+                $this->metrics->filename($device->hostname, 'ucd_' . $rrdName),
                 'value',
                 $now,
             );

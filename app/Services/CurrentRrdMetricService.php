@@ -16,6 +16,11 @@ class CurrentRrdMetricService
     ) {
     }
 
+    public function filename(string $hostname, string $rrdName): string
+    {
+        return $this->rrd->name($hostname, $rrdName);
+    }
+
     public function latestAverage(string $filename, string $dataset = 'value', ?int $now = null): ?TimeSeriesPoint
     {
         $now ??= time();
