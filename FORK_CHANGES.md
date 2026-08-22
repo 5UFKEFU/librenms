@@ -58,5 +58,9 @@ for every affected device.
 ## Upstream contributions
 
 Reusable changes are submitted to upstream as focused pull requests rather
-than including the downstream container packaging in an unrelated change. PR
-links are recorded here after submission.
+than including the downstream container packaging in an unrelated change:
+
+- [librenms/librenms#20354](https://github.com/librenms/librenms/pull/20354)
+  removes unsafe guessed low-temperature limits and migrates legacy guesses.
+- [librenms/librenms#20355](https://github.com/librenms/librenms/pull/20355)
+  adds the permission-checked single and bulk sensor threshold API.
