@@ -1,8 +1,12 @@
 # LibreNMS custom API image
 
 This image keeps the official LibreNMS container runtime and adds the sensor
-threshold API implemented in this fork. The base image is pinned by digest so
-the deployed application is reproducible.
+threshold API and current device metrics implemented in this fork. The base
+image is pinned by digest so the deployed application is reproducible.
+
+`GET /api/v0/devices/{hostname}/metrics/io-wait` returns the latest normalized
+I/O wait percentage calculated from matching UCD CPU RRD samples. The response
+also reports availability, sample time, raw wait rate, and related graph name.
 
 Build from the repository root:
 

@@ -23,6 +23,15 @@ up to 500 sensors in a transaction:
 The public request and response examples are documented in
 [`doc/API/Devices.md`](doc/API/Devices.md).
 
+## Current device metrics API
+
+`GET /api/v0/devices/{hostname}/metrics/io-wait` exposes a permission-checked
+current I/O wait percentage for native clients. It reads recent, timestamp-
+aligned UCD CPU RRD samples and calculates wait time as a share of all CPU
+states, so multi-core raw counters do not inflate the percentage. Missing or
+stale RRD data is returned as an explicit unavailable metric rather than a
+fabricated zero.
+
 ## Temperature limit discovery
 
 When hardware does not publish a low temperature threshold, LibreNMS no longer
@@ -50,10 +59,10 @@ unchanged. Build and deployment details are in
 ## Verification
 
 The fork includes API authorization/validation coverage and focused tests for
-temperature limit guessing, legacy-limit migration, explicit device limits,
-and user-customized limits. Production deployment should always be preceded by
-a database backup and followed by targeted discovery before running discovery
-for every affected device.
+current RRD parsing, temperature limit guessing, legacy-limit migration,
+explicit device limits, and user-customized limits. Production deployment
+should always be preceded by a database backup and followed by targeted
+discovery before running discovery for every affected device.
 
 ## Upstream contributions
 
