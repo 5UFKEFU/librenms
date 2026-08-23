@@ -10,6 +10,7 @@ COPY --chown=librenms:librenms app/Api/Controllers/DeviceCurrentMetricController
 COPY --chown=librenms:librenms app/Models/Traits/HasThresholds.php /opt/librenms/app/Models/Traits/HasThresholds.php
 COPY --chown=librenms:librenms app/Observers/SensorObserver.php /opt/librenms/app/Observers/SensorObserver.php
 COPY --chown=librenms:librenms app/Services/CurrentRrdMetricService.php /opt/librenms/app/Services/CurrentRrdMetricService.php
+COPY --chown=librenms:librenms app/Services/LiveSnmpMetricService.php /opt/librenms/app/Services/LiveSnmpMetricService.php
 COPY --chown=librenms:librenms routes/api.php /opt/librenms/routes/api.php
 
 USER root
