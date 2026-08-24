@@ -8,6 +8,7 @@ use App\Services\CurrentRrdMetricService;
 use App\Services\LiveSnmpMetricService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class DeviceCurrentMetricController extends Controller
@@ -28,6 +29,39 @@ class DeviceCurrentMetricController extends Controller
         private readonly CurrentRrdMetricService $metrics,
         private readonly LiveSnmpMetricService $liveMetrics,
     ) {
+    }
+
+    /**
+     * Return the most recent device-scoped SNMP sample without waiting for SNMP.
+     *
+     * When refresh=1 the response is sent first, then this PHP worker takes one
+     * counter snapshot.  Repeated lightweight reads from the app therefore form
+     * an on-demand sampler while keeping every user-visible request cache-fast.
+     */
+    public function realtime(Request $request, string $hostname): JsonResponse
+    {
+        $device = $this->findDevice($hostname);
+        $this->authorize('view', $device);
+
+        $refresh = $request->boolean('refresh');
+        if ($refresh && ! app()->runningUnitTests()) {
+            $deviceId = (int) $device->device_id;
+            app()->terminating(function () use ($deviceId): void {
+                $target = Device::find($deviceId);
+                if ($target !== null) {
+                    app(LiveSnmpMetricService::class)->refreshCache($target);
+                }
+            });
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'device_id' => (int) $device->device_id,
+            'hostname' => $device->hostname,
+            'refresh_scheduled' => $refresh,
+            'metrics' => $this->liveMetrics->cached($device),
+            'database_network' => $this->databaseNetwork($device),
+        ]);
     }
 
     public function live(string $hostname): JsonResponse
