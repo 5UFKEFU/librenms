@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('services', function (Blueprint $table) {
+        Schema::table('services', function (Blueprint $table): void {
             $table->unsignedInteger('service_checked')->default(0)->after('service_changed');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('services', function (Blueprint $table) {
+        Schema::table('services', function (Blueprint $table): void {
             $table->dropColumn('service_checked');
         });
     }
