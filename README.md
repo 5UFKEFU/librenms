@@ -23,6 +23,9 @@ Documentation
 Documentation can be found in the [doc directory][5] or [docs.librenms.org][16], including instructions
 for installing and contributing.
 
+This fork also maintains a concise record of its downstream API, sensor-limit,
+and container changes in [FORK_CHANGES.md](FORK_CHANGES.md).
+
 
 Participating
 -------------
@@ -142,5 +145,4 @@ Become a sponsor and get your logo on our README on GitHub with a link to your s
 <a href="https://opencollective.com/librenms/sponsor/7/website" target="_blank"><img src="https://opencollective.com/librenms/sponsor/7/avatar.svg"></a>
 <a href="https://opencollective.com/librenms/sponsor/8/website" target="_blank"><img src="https://opencollective.com/librenms/sponsor/8/avatar.svg"></a>
 <a href="https://opencollective.com/librenms/sponsor/9/website" target="_blank"><img src="https://opencollective.com/librenms/sponsor/9/avatar.svg"></a>
-
 

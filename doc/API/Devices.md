@@ -375,6 +375,43 @@ Output:
 }
 ```
 
+### `get_device_io_wait_metric`
+
+Get the latest I/O wait percentage calculated from timestamp-aligned UCD CPU
+RRD samples. Raw counters from multi-core systems are normalized against all
+CPU states. Missing or stale samples return an available value of `false` and
+a null value.
+
+Route: `/api/v0/devices/:hostname/metrics/io-wait`
+
+- hostname can be either the device hostname or id
+
+Example:
+
+```curl
+curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/metrics/io-wait
+```
+
+Output:
+
+```json
+{
+    "status": "ok",
+    "metric": {
+        "name": "io_wait",
+        "available": true,
+        "value": 0.0468,
+        "raw_value": 0.932,
+        "unit": "percent",
+        "timestamp": "2026-08-22T17:35:00+00:00",
+        "device_id": 29,
+        "hostname": "51.81.24.67",
+        "graph": "device_ucd_io_wait",
+        "source": "ucd_cpu_rrd"
+    }
+}
+```
+
 ### `list_available_wireless_graphs`
 
 This function allows to do three things:

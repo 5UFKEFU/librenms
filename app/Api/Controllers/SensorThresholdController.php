@@ -22,7 +22,7 @@ class SensorThresholdController extends Controller
     public function update(Sensor $sensor, Request $request): JsonResponse
     {
         $this->authorize('update', $sensor);
-        abort_if($sensor->sensor_deleted !== 0, 404);
+        abort_if($sensor->sensor_deleted, 404);
 
         $validated = $this->validateUpdate($request);
         $this->applyUpdate($sensor, $validated);

@@ -133,6 +133,7 @@ Route::prefix('v0')->group(function (): void {
             Route::get('{hostname}/graphs', [App\Api\Controllers\LegacyApiController::class, 'get_graphs'])->name('get_graphs');
             Route::get('{hostname}/fdb', [App\Api\Controllers\LegacyApiController::class, 'get_fdb'])->name('get_fdb');
             Route::get('{hostname}/nac', [App\Api\Controllers\LegacyApiController::class, 'get_nac'])->name('get_nac');
+            Route::get('{hostname}/metrics/io-wait', [App\Api\Controllers\DeviceCurrentMetricController::class, 'ioWait'])->name('get_device_io_wait_metric');
             Route::get('{hostname}/health/{type?}/{sensor_id?}', [App\Api\Controllers\LegacyApiController::class, 'list_available_health_graphs'])->name('list_available_health_graphs');
             Route::get('{hostname}/wireless/{type?}/{sensor_id?}', [App\Api\Controllers\LegacyApiController::class, 'list_available_wireless_graphs'])->name('list_available_wireless_graphs');
             Route::get('{hostname}/wireless-sensors', [App\Api\Controllers\LegacyApiController::class, 'get_device_wireless_sensors'])->name('get_device_wireless_sensors');
