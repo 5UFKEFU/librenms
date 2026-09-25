@@ -30,3 +30,19 @@ docker build \
 Use the resulting image for the `librenms`, `dispatcher`, `syslogng`, and
 `snmptrapd` services. Database, Redis, shared `/data` storage, and published
 ports remain unchanged.
+
+## Traffic graph display preference
+
+The image also includes the personal **Show incoming and outgoing traffic on the
+same axis** switch in Preferences (English, Simplified Chinese and Traditional
+Chinese). Its default is the existing global graph setting, normally off.
+No database migration is required; it uses the existing user preference table.
+
+For an existing installation with additional downstream patches, build a small
+layer over its currently deployed image and copy only the changed graph,
+preference controller, view and translation files. Keep the old image and a
+backup of the Compose file, replace only the web service image, and run
+`docker compose up -d --no-deps librenms`. This preserves the separate polling,
+database and Redis services. Clear compiled views if applying files to an
+already running web container. Verify both switch states and persistence after
+reload before accepting the release.
