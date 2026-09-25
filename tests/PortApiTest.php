@@ -2,7 +2,6 @@
 
 namespace LibreNMS\Tests;
 
-use App\Models\ApiToken;
 use App\Models\Device;
 use App\Models\Port;
 use App\Models\User;
@@ -16,7 +15,7 @@ final class PortApiTest extends DBTestCase
     {
         /** @var User $user */
         $user = User::factory()->admin()->create();
-        $token = ApiToken::generateToken($user);
+        $token = $user->createToken('test');
         $device = Device::factory()->create();
         $port = Port::factory()->for($device)->create([
             'ifName' => 'ether2',
@@ -25,7 +24,7 @@ final class PortApiTest extends DBTestCase
 
         $this->json('PATCH', "/api/v0/ports/{$port->port_id}/speed", [
             'speed' => 1000000000,
-        ], ['X-Auth-Token' => $token->token_hash])
+        ], ['X-Auth-Token' => $token->plainTextToken])
             ->assertStatus(200)
             ->assertJson([
                 'status' => 'ok',
@@ -53,7 +52,7 @@ final class PortApiTest extends DBTestCase
     {
         /** @var User $user */
         $user = User::factory()->admin()->create();
-        $token = ApiToken::generateToken($user);
+        $token = $user->createToken('test');
         $device = Device::factory()->create();
         $port = Port::factory()->for($device)->create([
             'ifName' => 'ether2',
@@ -63,7 +62,7 @@ final class PortApiTest extends DBTestCase
 
         $this->json('PATCH', "/api/v0/ports/{$port->port_id}/speed", [
             'speed' => 0,
-        ], ['X-Auth-Token' => $token->token_hash])
+        ], ['X-Auth-Token' => $token->plainTextToken])
             ->assertStatus(200)
             ->assertJson([
                 'status' => 'ok',
@@ -84,12 +83,12 @@ final class PortApiTest extends DBTestCase
     {
         /** @var User $user */
         $user = User::factory()->admin()->create();
-        $token = ApiToken::generateToken($user);
+        $token = $user->createToken('test');
         $port = Port::factory()->for(Device::factory())->create();
 
         $this->json('PATCH', "/api/v0/ports/{$port->port_id}/speed", [
             'speed' => -1,
-        ], ['X-Auth-Token' => $token->token_hash])
+        ], ['X-Auth-Token' => $token->plainTextToken])
             ->assertStatus(422)
             ->assertJsonPath('status', 'error');
     }
@@ -98,12 +97,12 @@ final class PortApiTest extends DBTestCase
     {
         /** @var User $user */
         $user = User::factory()->read()->create();
-        $token = ApiToken::generateToken($user);
+        $token = $user->createToken('test');
         $port = Port::factory()->for(Device::factory())->create();
 
         $this->json('PATCH', "/api/v0/ports/{$port->port_id}/speed", [
             'speed' => 1000000000,
-        ], ['X-Auth-Token' => $token->token_hash])
+        ], ['X-Auth-Token' => $token->plainTextToken])
             ->assertStatus(403);
     }
 }

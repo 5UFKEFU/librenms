@@ -91,3 +91,14 @@ positive-axis behavior. Unauthenticated graphs retain the site default.
 The outgoing percentile markers also follow the selected direction, including
 previous-period comparisons. Non-traffic negative values (such as wireless noise
 and swap memory) are not converted to positive values.
+
+## Master consolidation (2026-09-25)
+
+The fork master includes the reviewed sensor API and service check timestamp
+changes, and both the deployed and upstream versions of the personal traffic
+axis preference. Service timing is shown in the WebUI; the unused API-only
+check interval field has been removed.
+
+The current metrics API still uses `TimeSeriesPoint`, so this fork retains that
+value object after upstream removed its own caller. Port API tests use the
+current token authentication.
