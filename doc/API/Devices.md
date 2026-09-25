@@ -13,7 +13,7 @@ Input:
 Example:
 
 ```curl
-curl -X DELETE -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
+curl -X DELETE -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
 ```
 
 Output:
@@ -49,7 +49,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
 ```
 
 Output:
@@ -84,7 +84,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/discover
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/discover
 ```
 
 Output:
@@ -115,7 +115,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/availability
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/availability
 ```
 
 Output:
@@ -160,7 +160,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/outages
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/outages
 ```
 
 Output:
@@ -209,7 +209,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs
 ```
 
 Output:
@@ -262,7 +262,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health
 ```
 
 Output:
@@ -288,7 +288,7 @@ Output:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health/device_voltage
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health/device_voltage
 ```
 
 Output:
@@ -314,7 +314,7 @@ Output:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health/device_voltage/1
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health/device_voltage/1
 ```
 
 Output:
@@ -356,7 +356,7 @@ Output:
 Example (processor list):
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health/processor
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/health/processor
 ```
 
 Output:
@@ -433,7 +433,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless
 ```
 
 Output:
@@ -458,7 +458,7 @@ Output:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless/device_wireless_ccq
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless/device_wireless_ccq
 ```
 
 Output:
@@ -483,7 +483,7 @@ Output:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless/device_wireless_ccq/1
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless/device_wireless_ccq/1
 ```
 
 Output:
@@ -543,7 +543,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless-sensors
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless-sensors
 ```
 
 Output:
@@ -580,7 +580,7 @@ Output:
 Example filtered by class and selecting a subset of columns:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless-sensors?class=rssi&columns=sensor_id,sensor_index,sensor_descr,sensor_current
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/wireless-sensors?class=rssi&columns=sensor_id,sensor_index,sensor_descr,sensor_current
 ```
 
 Output:
@@ -619,7 +619,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/health/device_voltage
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/health/device_voltage
 ```
 
 Output:
@@ -629,7 +629,7 @@ Output is a stacked graph for the health type provided.
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/health/device_voltage/1
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/health/device_voltage/1
 ```
 
 Output:
@@ -656,7 +656,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/wireless/device_wireless_ccq
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/wireless/device_wireless_ccq
 ```
 
 Output:
@@ -666,7 +666,7 @@ Output is a stacked graph for the wireless type provided.
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/wireless/device_wireless_ccq/1
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/graphs/wireless/device_wireless_ccq/1
 ```
 
 Output:
@@ -699,7 +699,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/device_poller_perf
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/device_poller_perf
 ```
 
 Output:
@@ -730,7 +730,7 @@ Input:
   Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/services/35/graphs/loss
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/services/35/graphs/loss
 ```
 
 Output:
@@ -754,7 +754,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports
 ```
 
 Output:
@@ -781,7 +781,7 @@ Output:
 Example with VLANs:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports?with=vlans
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports?with=vlans
 ```
 
 Output:
@@ -837,7 +837,7 @@ Route: `/api/v0/devices/:hostname/fdb`
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/fdb
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/fdb
 ```
 
 Output:
@@ -868,7 +868,7 @@ Route: `/api/v0/devices/:hostname/nac`
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/nac
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/nac
 ```
 
 Output:
@@ -914,7 +914,7 @@ Route: `/api/v0/devices/:hostname/ip`
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ip
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ip
 ```
 
 Output:
@@ -948,7 +948,7 @@ Route: `/api/v0/devices/:hostname/port_stack`
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/port_stack
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/port_stack
 ```
 
 Output:
@@ -992,7 +992,7 @@ Route: `/api/v0/devices/:hostname/transceivers`
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/transceivers
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/transceivers
 ```
 
 Output:
@@ -1070,7 +1070,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components
 ```
 
 Output:
@@ -1127,7 +1127,7 @@ Route: `/api/v0/devices/:hostname/components/:type`
 Example:
 
 ```curl
-curl -X POST -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components/APITEST
+curl -X POST -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components/APITEST
 ```
 
 Output:
@@ -1161,7 +1161,7 @@ Route: `/api/v0/devices/:hostname/components`
 In this example we set the label and add a new field: TestField:
 
 ```curl
-curl -X PUT -d '{"4459": {"type": "APITEST","label": "This is a test label","status": 1,"ignore": 0,"disabled": 0,"error": "","TestField": "TestData"}}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components
+curl -X PUT -d '{"4459": {"type": "APITEST","label": "This is a test label","status": 1,"ignore": 0,"disabled": 0,"error": "","TestField": "TestData"}}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components
 ```
 
 Output:
@@ -1189,7 +1189,7 @@ Route: `/api/v0/devices/:hostname/components/:component`
 Example:
 
 ```curl
-curl -X DELETE -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components/4459
+curl -X DELETE -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/components/4459
 ```
 
 Output:
@@ -1220,7 +1220,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports/eth0
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports/eth0
 ```
 
 Output:
@@ -1270,7 +1270,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports/eth0/port_bits
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/ports/eth0/port_bits
 ```
 
 Output:
@@ -1290,7 +1290,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/resources/sensors
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/resources/sensors
 ```
 
 Output:
@@ -1416,7 +1416,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices?order=hostname%20DESC&type=down
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices?order=hostname%20DESC&type=down
 ```
 
 Output:
@@ -1440,7 +1440,7 @@ Output:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices?type=mac&query=00000c9ff013
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices?type=mac&query=00000c9ff013
 ```
 
 Output:
@@ -1474,7 +1474,7 @@ Input:
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/maintenance
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/maintenance
 ```
 
 Output:
@@ -1510,7 +1510,7 @@ Input (JSON):
 Example with start time:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' \
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' \
   -X POST https://foo.example/api/v0/devices/localhost/maintenance/ \
   --data-raw '
 {
@@ -1534,7 +1534,7 @@ Output:
 Example with no start time:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' \
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' \
   -X POST https://foo.example/api/v0/devices/localhost/maintenance/ \
   --data-raw '
 {
@@ -1610,7 +1610,7 @@ For ICMP only:
 Example:
 
 ```curl
-curl -X POST -d '{"hostname":"localhost.localdomain","version":"v1","community":"public"}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices
+curl -X POST -d '{"hostname":"localhost.localdomain","version":"v1","community":"public"}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices
 ```
 
 Output:
@@ -1647,7 +1647,7 @@ Input (JSON):
 Examples:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/oxidized
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/oxidized
 ```
 
 Output:
@@ -1681,7 +1681,7 @@ Input (JSON):
 Examples:
 
 ```curl
-curl -X PATCH -d '{"field": "notes", "data": "This server should be kept online"}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
+curl -X PATCH -d '{"field": "notes", "data": "This server should be kept online"}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
 ```
 
 Output:
@@ -1710,7 +1710,7 @@ Input (JSON):
 Examples:
 
 ```curl
-curl -X PATCH -d '{"notes": "This port is in a scheduled maintenance with the provider."}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/port/5
+curl -X PATCH -d '{"notes": "This port is in a scheduled maintenance with the provider."}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/port/5
 ```
 
 Output:
@@ -1725,7 +1725,7 @@ Output:
 ```
 
 ```curl
-curl -X PATCH -d '{"field": ["notes","purpose"], "data": ["This server should be kept online", "For serving web traffic"]}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
+curl -X PATCH -d '{"field": ["notes","purpose"], "data": ["This server should be kept online", "For serving web traffic"]}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost
 ```
 
 Output:
@@ -1754,7 +1754,7 @@ Input:
 Examples:
 
 ```curl
-curl -X PATCH  -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/rename/localhost2
+curl -X PATCH  -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/rename/localhost2
 ```
 
 Output:
@@ -1783,7 +1783,7 @@ Input (JSON):
 Examples:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/groups
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/localhost/groups
 ```
 
 Output:
@@ -1821,7 +1821,7 @@ Input:
 
 Example:
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/oxidized/config/search/vlan10
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/oxidized/config/search/vlan10
 ```
 
 Output:
@@ -1856,7 +1856,7 @@ Input:
 
 Example:
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/oxidized/config/router.corp.com
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/oxidized/config/router.corp.com
 ```
 
 Output:
@@ -1879,7 +1879,7 @@ Input (JSON):
 
 Example:
 ```curl
-curl -X POST -d '{"parent_ids":"15,16,17"}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/1/parents
+curl -X POST -d '{"parent_ids":"15,16,17"}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/1/parents
 ```
 
 Output:
@@ -1902,7 +1902,7 @@ Input (JSON):
 
 Example:
 ```curl
-curl -X DELETE -d '{"parent_ids":"15,16,17"}' -H 'X-Auth-Token: YOURAPITOKENHERE' https://foo.example/api/v0/devices/1/parents
+curl -X DELETE -d '{"parent_ids":"15,16,17"}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/devices/1/parents
 ```
 
 Output:
@@ -1921,7 +1921,7 @@ from `list_devices`.  See that entry point for more detailed information.
 Example:
 
 ```curl
-curl -H 'X-Auth-Token: YOURAPITOKENHERE' 'http://foo.example/api/v0/devices?type=device_id&query=34'
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' 'http://foo.example/api/v0/devices?type=device_id&query=34'
 ```
 
 Output:
