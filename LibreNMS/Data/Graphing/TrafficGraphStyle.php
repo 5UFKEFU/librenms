@@ -5,6 +5,10 @@ namespace LibreNMS\Data\Graphing;
 /** Keep overlapping traffic directions readable without blending filled areas. */
 class TrafficGraphStyle
 {
+    /**
+     * @param  list<string>  $options
+     * @return list<string>
+     */
     public static function sameAxis(array $options): array
     {
         $colors = [];
