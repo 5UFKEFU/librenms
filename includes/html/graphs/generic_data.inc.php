@@ -40,7 +40,7 @@ if ($inverse) {
         [$egress_speed, $ingress_speed] = PortCache::get($port['port_id'])->getSpeeds();
     }
 }
-$stacked = generate_stacked_graphs((! empty($egress_speed) || ! empty($ingress_speed)) && ($vars['port_speed_zoom'] ?? LibrenmsConfig::get('graphs.port_speed_zoom')));
+$stacked = generate_stacked_graphs((! empty($egress_speed) || ! empty($ingress_speed)) && ($vars['port_speed_zoom'] ?? LibrenmsConfig::get('graphs.port_speed_zoom')), '88', $graph_params->trafficSameAxis);
 
 if ($multiplier) {
     $rrd_options[] = 'DEF:p' . $out . 'octets=' . $rrd_filename_out . ':' . $ds_out . ':AVERAGE';
@@ -176,7 +176,8 @@ $rrd_options[] = 'LINE1:dpercentile_out#aa0000';
 $speed_line_type = ($vars['port_speed_zoom'] ?? LibrenmsConfig::get('graphs.port_speed_zoom')) ? 'LINE2' : 'HRULE';
 if (! empty($egress_speed) && ! empty($ingress_speed) && $ingress_speed != $egress_speed) {
     $rrd_options[] = "$speed_line_type:$ingress_speed#000000:In Port Speed " . Number::formatSi($ingress_speed, 2, 0, 'bps') . '\\n';
-    $rrd_options[] = "$speed_line_type:-$egress_speed#000000:Out Port Speed " . Number::formatSi($egress_speed, 2, 0, 'bps') . '\\n';
+    $outgoing_speed = $egress_speed * (int) $stacked['stacked'];
+    $rrd_options[] = "$speed_line_type:$outgoing_speed#000000:Out Port Speed " . Number::formatSi($egress_speed, 2, 0, 'bps') . '\\n';
 } elseif (! empty($egress_speed)) {
     $rrd_options[] = "$speed_line_type:$egress_speed#000000:Port Speed " . Number::formatSi($egress_speed, 2, 0, 'bps') . '\\n';
 }

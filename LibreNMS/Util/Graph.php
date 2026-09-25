@@ -206,8 +206,12 @@ class Graph
                 throw new RrdGraphException('Graph Definition Error', 'Def Error', $width, $height);
             }
 
-            if (generate_stacked_graphs()['stacked'] === '1') {
+            if (generate_stacked_graphs(false, '88', $graph_params->trafficSameAxis)['stacked'] === '1') {
                 $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::sameAxis($rrd_options);
+            }
+
+            if ($graph_params->supportsTrafficDirection) {
+                $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::direction($rrd_options, $graph_params->trafficDirection);
             }
 
             return [...$graph_params->toRrdOptions(), ...$rrd_options];

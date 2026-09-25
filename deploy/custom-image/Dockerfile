@@ -41,5 +41,9 @@ COPY --chown=librenms:librenms includes/html/graphs/generic_duplex.inc.php /opt/
 COPY --chown=librenms:librenms LibreNMS/Util/Graph.php /opt/librenms/LibreNMS/Util/Graph.php
 COPY --chown=librenms:librenms LibreNMS/Data/Graphing/TrafficGraphStyle.php /opt/librenms/LibreNMS/Data/Graphing/TrafficGraphStyle.php
 
+# Per-request traffic graph controls for API clients.
+COPY --chown=librenms:librenms LibreNMS/Data/Graphing/GraphParameters.php /opt/librenms/LibreNMS/Data/Graphing/GraphParameters.php
+COPY --chown=librenms:librenms includes/html/graphs/generic_data.inc.php /opt/librenms/includes/html/graphs/generic_data.inc.php
+
 USER root
 RUN rm -f /opt/librenms/bootstrap/cache/routes.php /opt/librenms/bootstrap/cache/routes-*.php

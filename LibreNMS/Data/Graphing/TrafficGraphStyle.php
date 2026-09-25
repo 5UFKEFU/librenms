@@ -39,6 +39,51 @@ class TrafficGraphStyle
         }, $options);
     }
 
+    /**
+     * Hide only drawing/legend commands, preserving every RRD definition and calculation.
+     * Scoped by GraphParameters to device_bits and port_bits templates.
+     *
+     * @param  list<string>  $options
+     * @return list<string>
+     */
+    public static function direction(array $options, string $direction): array
+    {
+        if (! in_array($direction, ['in', 'out'], true)) {
+            return $options;
+        }
+
+        return array_values(array_filter($options, function (string $option) use ($direction): bool {
+            if (! preg_match('/^(?:AREA|LINE[\d.]*|HRULE|GPRINT|PRINT):([^:#]+)(.*)$/i', $option, $match)) {
+                return true;
+            }
+            $series = $match[1];
+            if (preg_match('/^(?:d?out|totout|aveout|d?percentile_out|olsl)/i', $series)) {
+                return $direction === 'out';
+            }
+            if (preg_match('/^(?:in|totin|avein|percentile_in|ilsl)/i', $series)) {
+                return $direction === 'in';
+            }
+            // Combined totals and the highest-of-both percentile would mislabel a single direction.
+            if (preg_match('/^(?:totX?|bitsX?|octetsX?|percentilehigh)$/i', $series)) {
+                return false;
+            }
+            // Aggregate templates use off-scale HRULEs as legend headings; port speed is numeric too.
+            if (str_starts_with($option, 'HRULE:') || preg_match('/^LINE[\d.]*:-?[\d.]+#/', $option)) {
+                if (preg_match('/(?:^|[ :\\\\])Out(?:[ :\\\\]|$)/i', $match[2])) {
+                    return $direction === 'out';
+                }
+                if (preg_match('/(?:^|[ :\\\\])In(?:[ :\\\\]|$)/i', $match[2])) {
+                    return $direction === 'in';
+                }
+                if (str_contains($match[2], ' Agg')) {
+                    return false;
+                }
+            }
+
+            return true;
+        }));
+    }
+
     private static function outgoing(string $series): bool
     {
         return (bool) preg_match('/^d?out/i', $series);

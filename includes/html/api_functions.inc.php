@@ -121,6 +121,11 @@ function api_not_found(): JsonResponse
 
 function api_get_graph(Request $request, array $additional = [])
 {
+    $request->validate([
+        'traffic_direction' => 'sometimes|in:in,out,both',
+        'traffic_same_axis' => 'sometimes|boolean',
+    ]);
+
     try {
         $vars = $request->only([
             'from',
@@ -140,6 +145,8 @@ function api_get_graph(Request $request, array $additional = [])
             'inverse',
             'previous',
             'duration',
+            'traffic_direction',
+            'traffic_same_axis',
         ]);
 
         $graph = Graph::get([
@@ -153,7 +160,12 @@ function api_get_graph(Request $request, array $additional = [])
             return api_success(['image' => $graph->base64(), 'content-type' => $graph->contentType()], 'image');
         }
 
-        return response($graph->data, 200, ['Content-Type' => $graph->contentType()]);
+        $headers = ['Content-Type' => $graph->contentType()];
+        if (in_array($additional['type'] ?? '', ['device_bits', 'port_bits'], true)) {
+            $headers['X-Traffic-Direction'] = $request->input('traffic_direction', 'both');
+        }
+
+        return response($graph->data, 200, $headers);
     } catch (\LibreNMS\Exceptions\RrdGraphException $e) {
         return api_error(500, $e->getMessage());
     }

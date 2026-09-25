@@ -1266,6 +1266,16 @@ Input:
   the port instead of ifName. Pass the ifDescr value you want to
   search in the same way as ifName.
 - graph_type: This can be png or svg to force the output as required.
+- traffic_direction: `both` (default), `in`, or `out`, for `port_bits` and
+  `device_bits`. Filters curves and their legends, not stored data.
+- traffic_same_axis: `1` draws both directions above zero; `0` uses the
+  mirrored layout. Omitting this retains the user's existing preference.
+  Applies to `port_bits` and `device_bits` only.
+
+These controls also apply to `/api/v0/devices/:hostname/device_bits`.
+Successful binary responses include `X-Traffic-Direction: in|out|both` so
+clients can detect servers that do not yet implement direction filtering.
+
 
 Example:
 

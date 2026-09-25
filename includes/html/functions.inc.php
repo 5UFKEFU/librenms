@@ -711,12 +711,12 @@ function get_oxidized_nodes_list()
  * @param  string  $transparency  value of desired transparency applied to rrdtool options (values 01 - 99)
  * @return array containing transparency and stacked setup
  */
-function generate_stacked_graphs($force_stack = false, $transparency = '88')
+function generate_stacked_graphs($force_stack = false, $transparency = '88', ?bool $sameAxis = null)
 {
     $user = Auth::user();
     $user?->loadMissing('preferences');
     $same_axis = $user ? \App\Models\UserPref::getPref($user, 'traffic_same_axis') : null;
-    $enabled = $same_axis === null ? LibrenmsConfig::get('webui.graph_stacked') : (bool) $same_axis;
+    $enabled = $sameAxis ?? ($same_axis === null ? LibrenmsConfig::get('webui.graph_stacked') : (bool) $same_axis);
 
     if ($enabled || $force_stack == true) {
         return ['transparency' => $transparency, 'stacked' => '1'];

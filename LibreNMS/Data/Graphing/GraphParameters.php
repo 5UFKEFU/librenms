@@ -60,6 +60,10 @@ class GraphParameters implements \Stringable
     public readonly int $period;
     public readonly int $prev_from;
 
+    public readonly ?bool $trafficSameAxis;
+    public readonly string $trafficDirection;
+    public readonly bool $supportsTrafficDirection;
+
     public readonly bool $inverse;
     public readonly string $in;
     public readonly string $out;
@@ -89,6 +93,12 @@ class GraphParameters implements \Stringable
     {
         $this->imageFormat = ImageFormat::forGraph($vars['graph_type'] ?? null);
         [$this->type, $this->subtype] = $this->extractType($vars['type'] ?? '');
+
+        $this->supportsTrafficDirection = in_array($vars['type'] ?? '', ['device_bits', 'port_bits'], true);
+        $this->trafficDirection = $this->supportsTrafficDirection && in_array($vars['traffic_direction'] ?? '', ['in', 'out'], true)
+            ? $vars['traffic_direction'] : 'both';
+        $this->trafficSameAxis = $this->supportsTrafficDirection && isset($vars['traffic_same_axis'])
+            ? filter_var($vars['traffic_same_axis'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
 
         $this->width = (int) ($vars['width'] ?? 400);
         $this->height = (int) ($vars['height'] ?? $this->width / 3);

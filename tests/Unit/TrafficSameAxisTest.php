@@ -10,6 +10,20 @@ use LibreNMS\Tests\TestCase;
 
 class TrafficSameAxisTest extends TestCase
 {
+    public function testRequestLayoutDoesNotChangeUserPreferenceOrOtherGraphTypes(): void
+    {
+        LibrenmsConfig::set('webui.graph_stacked', false);
+        $params = new \LibreNMS\Data\Graphing\GraphParameters(['type' => 'device_bits', 'traffic_same_axis' => '1', 'traffic_direction' => 'out']);
+        $this->assertTrue($params->supportsTrafficDirection);
+        $this->assertSame('out', $params->trafficDirection);
+        $this->assertSame('1', generate_stacked_graphs(false, '88', $params->trafficSameAxis)['stacked']);
+        $this->assertSame('-1', generate_stacked_graphs()['stacked']);
+        $other = new \LibreNMS\Data\Graphing\GraphParameters(['type' => 'device_mempool', 'traffic_same_axis' => '1', 'traffic_direction' => 'in']);
+        $this->assertFalse($other->supportsTrafficDirection);
+        $this->assertNull($other->trafficSameAxis);
+        $this->assertSame('both', $other->trafficDirection);
+    }
+
     public function testDefaultRetainsInvertedGraphs(): void
     {
         LibrenmsConfig::set('webui.graph_stacked', false);

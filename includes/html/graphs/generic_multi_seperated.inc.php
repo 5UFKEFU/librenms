@@ -48,7 +48,7 @@ if ($width > '1500') {
     $rrddescr_len += min(15, round($width / 30));
 }
 
-$stacked = generate_stacked_graphs();
+$stacked = generate_stacked_graphs(false, '88', $graph_params->trafficSameAxis);
 
 $units_descr = LibreNMS\Data\Store\Rrd::fixedSafeDescr($units_descr ?? '', $rrddescr_len + 5);
 

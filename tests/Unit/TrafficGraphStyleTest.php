@@ -7,6 +7,21 @@ use PHPUnit\Framework\TestCase;
 
 class TrafficGraphStyleTest extends TestCase
 {
+    public function testDirectionRemovesHiddenSeriesAndLegendButPreservesCalculations(): void
+    {
+        $definitions = ['DEF:inoctets=a:INOCTETS:AVERAGE', 'DEF:outoctets=a:OUTOCTETS:AVERAGE', 'CDEF:tot=inbits,outbits,+'];
+        $in = ['AREA:inbits#00A6ED:In', 'LINE2:inbitsX#00A6ED:Previous In', 'GPRINT:totin:Total In', 'LINE1:percentile_in#aa0000', 'HRULE:999999999999999#FFFFFF:Total  In'];
+        $out = ['AREA:outbits0_neg#FF8C00:Out', 'LINE2:doutbits_maxX#FF8C00:Previous Out', 'GPRINT:outbits:LAST:%6.2lf%s', 'LINE1:dpercentile_out#aa0000', 'HRULE:999999999999999#FF8C00: Out'];
+        $aggregate = ['GPRINT:tot:Total', 'GPRINT:bits:LAST:%6.2lf%s', 'HRULE:999999999999990#FFFFFF: Agg', 'HRULE:percentilehigh#FF0000:Highest'];
+        $options = [...$definitions, ...$in, ...$out, ...$aggregate];
+        $this->assertSame([...$definitions, ...$in], TrafficGraphStyle::direction($options, 'in'));
+        $this->assertSame([...$definitions, ...$out], TrafficGraphStyle::direction($options, 'out'));
+        $this->assertSame($options, TrafficGraphStyle::direction($options, 'both'));
+        $this->assertSame($options, TrafficGraphStyle::direction($options, 'invalid'));
+        $styled = TrafficGraphStyle::sameAxis($options);
+        $this->assertSame(TrafficGraphStyle::sameAxis([...$definitions, ...$out]), TrafficGraphStyle::direction($styled, 'out'));
+    }
+
     public function testOverlappingDirectionsUseDistinctStrokesWithoutChangingDataOrStacking(): void
     {
         $options = [
