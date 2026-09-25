@@ -38,5 +38,8 @@ COPY --chown=librenms:librenms resources/views/user/preferences.blade.php /opt/l
 COPY --chown=librenms:librenms includes/html/graphs/generic_multi_data.inc.php /opt/librenms/includes/html/graphs/generic_multi_data.inc.php
 COPY --chown=librenms:librenms includes/html/graphs/generic_duplex.inc.php /opt/librenms/includes/html/graphs/generic_duplex.inc.php
 
+COPY --chown=librenms:librenms LibreNMS/Util/Graph.php /opt/librenms/LibreNMS/Util/Graph.php
+COPY --chown=librenms:librenms LibreNMS/Data/Graphing/TrafficGraphStyle.php /opt/librenms/LibreNMS/Data/Graphing/TrafficGraphStyle.php
+
 USER root
 RUN rm -f /opt/librenms/bootstrap/cache/routes.php /opt/librenms/bootstrap/cache/routes-*.php
