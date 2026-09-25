@@ -17,5 +17,29 @@ COPY --chown=librenms:librenms includes/html/api_functions.inc.php /opt/librenms
 COPY --chown=librenms:librenms database/migrations/2026_08_23_060000_add_service_checked_to_services_table.php /opt/librenms/database/migrations/2026_08_23_060000_add_service_checked_to_services_table.php
 COPY --chown=librenms:librenms routes/api.php /opt/librenms/routes/api.php
 
+# Personal same-axis traffic graphs and all shared/specialized renderers.
+COPY --chown=librenms:librenms app/Http/Controllers/UserPreferencesController.php /opt/librenms/app/Http/Controllers/UserPreferencesController.php
+COPY --chown=librenms:librenms includes/html/functions.inc.php /opt/librenms/includes/html/functions.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/bill/bits.inc.php /opt/librenms/includes/html/graphs/bill/bits.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/device/ipSystemStats.inc.php /opt/librenms/includes/html/graphs/device/ipSystemStats.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/device/ipsystemstats_ipv4.inc.php /opt/librenms/includes/html/graphs/device/ipsystemstats_ipv4.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/device/ipsystemstats_ipv6.inc.php /opt/librenms/includes/html/graphs/device/ipsystemstats_ipv6.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/generic_multi_bits.inc.php /opt/librenms/includes/html/graphs/generic_multi_bits.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/generic_multi_seperated.inc.php /opt/librenms/includes/html/graphs/generic_multi_seperated.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/multiport/bits_duo.inc.php /opt/librenms/includes/html/graphs/multiport/bits_duo.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/multiport/bits_trio.inc.php /opt/librenms/includes/html/graphs/multiport/bits_trio.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/port/mac_acc_total.inc.php /opt/librenms/includes/html/graphs/port/mac_acc_total.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/qfp/avgpktsize.inc.php /opt/librenms/includes/html/graphs/qfp/avgpktsize.inc.php
+COPY --chown=librenms:librenms lang/en/preferences.php /opt/librenms/lang/en/preferences.php
+COPY --chown=librenms:librenms lang/zh-CN/preferences.php /opt/librenms/lang/zh-CN/preferences.php
+COPY --chown=librenms:librenms lang/zh-TW/preferences.php /opt/librenms/lang/zh-TW/preferences.php
+COPY --chown=librenms:librenms resources/views/user/preferences.blade.php /opt/librenms/resources/views/user/preferences.blade.php
+
+COPY --chown=librenms:librenms includes/html/graphs/generic_multi_data.inc.php /opt/librenms/includes/html/graphs/generic_multi_data.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/generic_duplex.inc.php /opt/librenms/includes/html/graphs/generic_duplex.inc.php
+
+COPY --chown=librenms:librenms LibreNMS/Util/Graph.php /opt/librenms/LibreNMS/Util/Graph.php
+COPY --chown=librenms:librenms LibreNMS/Data/Graphing/TrafficGraphStyle.php /opt/librenms/LibreNMS/Data/Graphing/TrafficGraphStyle.php
+
 USER root
 RUN rm -f /opt/librenms/bootstrap/cache/routes.php /opt/librenms/bootstrap/cache/routes-*.php

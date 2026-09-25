@@ -73,3 +73,21 @@ than including the downstream container packaging in an unrelated change:
   removes unsafe guessed low-temperature limits and migrates legacy guesses.
 - [librenms/librenms#20355](https://github.com/librenms/librenms/pull/20355)
   adds the permission-checked single and bulk sensor threshold API.
+
+## Personal traffic graph layout
+
+Preferences includes a **Show incoming and outgoing traffic on the same axis**
+switch. It is saved per user and applies to shared duplex graph renderers,
+including device/port aggregates, dashboard/preview graphs, billing graphs,
+MAC accounting, multiport comparisons and IP traffic statistics. Both directions
+use positive values with blue solid incoming lines and orange dashed outgoing
+lines, without filled areas that can obscure or blend the two directions.
+The switch does not add incoming and outgoing rates together or change recorded
+traffic, legends, totals or billing calculations. Existing installations keep
+their global `webui.graph_stacked` default until a user saves a personal choice;
+the factory default remains off. Explicit port-speed zoom retains its existing
+positive-axis behavior. Unauthenticated graphs retain the site default.
+
+The outgoing percentile markers also follow the selected direction, including
+previous-period comparisons. Non-traffic negative values (such as wireless noise
+and swap memory) are not converted to positive values.
