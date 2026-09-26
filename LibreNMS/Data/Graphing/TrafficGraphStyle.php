@@ -52,7 +52,7 @@ class TrafficGraphStyle
             return $options;
         }
 
-        return array_values(array_filter($options, function (string $option) use ($direction): bool {
+        $visible = array_values(array_filter($options, function (string $option) use ($direction): bool {
             if (! preg_match('/^(?:AREA|LINE[\d.]*|HRULE|GPRINT|PRINT):([^:#]+)(.*)$/i', $option, $match)) {
                 return true;
             }
@@ -82,6 +82,19 @@ class TrafficGraphStyle
 
             return true;
         }));
+
+        return array_map(function (string $option): string {
+            // Port totals wrap both directions in one pair of parentheses.
+            // A filtered direction needs its own complete legend line.
+            if (preg_match('/^GPRINT:totinX?:\(In /', $option)) {
+                return str_replace(':(In ', ':In ', $option) . '\\l';
+            }
+            if (preg_match('/^GPRINT:totoutX?:Out /', $option)) {
+                return str_replace(')\\l', '\\l', $option);
+            }
+
+            return $option;
+        }, $visible);
     }
 
     private static function outgoing(string $series): bool

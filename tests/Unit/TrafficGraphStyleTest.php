@@ -7,6 +7,16 @@ use PHPUnit\Framework\TestCase;
 
 class TrafficGraphStyleTest extends TestCase
 {
+    public function testSingleDirectionPortTotalsHaveCompleteLegendLines(): void
+    {
+        foreach (['', 'X'] as $suffix) {
+            $options = ["GPRINT:totin$suffix:(In %6.2lf%sB", "GPRINT:totout$suffix:Out %6.2lf%sB)\\l"];
+            $this->assertSame(["GPRINT:totin$suffix:In %6.2lf%sB\\l"], TrafficGraphStyle::direction($options, 'in'));
+            $this->assertSame(["GPRINT:totout$suffix:Out %6.2lf%sB\\l"], TrafficGraphStyle::direction($options, 'out'));
+            $this->assertSame($options, TrafficGraphStyle::direction($options, 'both'));
+        }
+    }
+
     public function testDirectionRemovesHiddenSeriesAndLegendButPreservesCalculations(): void
     {
         $definitions = ['DEF:inoctets=a:INOCTETS:AVERAGE', 'DEF:outoctets=a:OUTOCTETS:AVERAGE', 'CDEF:tot=inbits,outbits,+'];
