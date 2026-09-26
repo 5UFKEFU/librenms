@@ -149,8 +149,8 @@ foreach ($rrd_list ?? [] as $rrd) {
     }
 
     if (! $nodetails) {
-        $descr = LibreNMS\Data\Store\Rrd::fixedSafeDescr($rrd['descr'], $rrddescr_len) . '  In';
-        $descr_out = LibreNMS\Data\Store\Rrd::fixedSafeDescr($graph_params->trafficDirection === 'out' ? $rrd['descr'] : '', $rrddescr_len) . ' Out';
+        $descr = LibreNMS\Data\Store\Rrd::fixedSafeDescr($rrd['descr'], $rrddescr_len) . ($rrd['in_label'] ?? '  In');
+        $descr_out = LibreNMS\Data\Store\Rrd::fixedSafeDescr(isset($rrd['out_label']) ? ($rrd['descr_out'] ?? $rrd['descr']) : ($graph_params->trafficDirection === 'out' ? $rrd['descr'] : ''), $rrddescr_len) . ($rrd['out_label'] ?? ' Out');
     }
 
     $rrd_options[] = 'AREA:inbits' . $i . '#' . $colour_in . $stacked['transparency'] . ":$descr$stack";

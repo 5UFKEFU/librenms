@@ -63,6 +63,7 @@ class GraphParameters implements \Stringable
     public readonly ?bool $trafficSameAxis;
     public readonly string $trafficDirection;
     public readonly bool $supportsTrafficDirection;
+    public readonly bool $physicalDisksOnly;
 
     public readonly bool $inverse;
     public readonly string $in;
@@ -93,6 +94,9 @@ class GraphParameters implements \Stringable
     {
         $this->imageFormat = ImageFormat::forGraph($vars['graph_type'] ?? null);
         [$this->type, $this->subtype] = $this->extractType($vars['type'] ?? '');
+
+        $this->physicalDisksOnly = in_array($vars['type'] ?? '', ['device_diskio_bits', 'device_diskio_ops'], true)
+            && ($vars['disk_scope'] ?? '') === 'physical';
 
         $this->supportsTrafficDirection = in_array($vars['type'] ?? '', ['device_bits', 'port_bits'], true);
         $this->trafficDirection = $this->supportsTrafficDirection && in_array($vars['traffic_direction'] ?? '', ['in', 'out'], true)

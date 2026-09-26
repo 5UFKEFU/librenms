@@ -54,3 +54,16 @@ and the default graph request follows that user's choice. API clients may
 explicitly pass `traffic_same_axis=0` to retain the legacy mirrored rendering
 regardless of the website preference. Same-axis multi-interface graphs use
 separate interface colors, solid incoming strokes, and dashed outgoing strokes.
+
+## Physical disk history
+
+For `device_diskio_bits` and `device_diskio_ops`, API clients may request
+`disk_scope=physical`. The response acknowledges it with
+`X-Disk-Scope: physical`. Omit the parameter (or use `all`) to retain
+the original graph. Each retained device has separate Read and Write labels.
+
+The filter uses SNMP block-device names: whole SATA/SCSI, NVMe namespaces,
+virtio/Xen guest disks, MMC and BSD whole disks are kept; partitions, md/dm,
+bcache, loop and zram are excluded. It does not infer physical hardware behind
+a RAID controller or hypervisor, and unknown device-name formats are excluded.
+No RRD data, polling configuration, or database schema is changed.

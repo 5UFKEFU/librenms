@@ -49,3 +49,8 @@ USER root
 RUN rm -f /opt/librenms/bootstrap/cache/routes.php /opt/librenms/bootstrap/cache/routes-*.php
 
 COPY --chown=librenms:librenms app/Services/PolledDeviceMetricService.php /opt/librenms/app/Services/PolledDeviceMetricService.php
+
+# Optional whole-disk history for mobile clients.
+COPY --chown=librenms:librenms LibreNMS/Data/Graphing/DiskGraphScope.php /opt/librenms/LibreNMS/Data/Graphing/DiskGraphScope.php
+COPY --chown=librenms:librenms includes/html/graphs/device/diskio_common.inc.php /opt/librenms/includes/html/graphs/device/diskio_common.inc.php
+COPY --chown=librenms:librenms includes/html/graphs/generic_multi_bits_separated.inc.php /opt/librenms/includes/html/graphs/generic_multi_bits_separated.inc.php

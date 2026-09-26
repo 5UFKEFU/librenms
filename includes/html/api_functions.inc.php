@@ -123,6 +123,7 @@ function api_get_graph(Request $request, array $additional = [])
 {
     $request->validate([
         'traffic_direction' => 'sometimes|in:in,out,both',
+        'disk_scope' => 'sometimes|in:all,physical',
         'traffic_same_axis' => 'sometimes|boolean',
     ]);
 
@@ -145,6 +146,7 @@ function api_get_graph(Request $request, array $additional = [])
             'inverse',
             'previous',
             'duration',
+            'disk_scope',
             'traffic_direction',
             'traffic_same_axis',
         ]);
@@ -161,6 +163,9 @@ function api_get_graph(Request $request, array $additional = [])
         }
 
         $headers = ['Content-Type' => $graph->contentType()];
+        if (in_array($additional['type'] ?? '', ['device_diskio_bits', 'device_diskio_ops'], true)) {
+            $headers['X-Disk-Scope'] = $request->input('disk_scope', 'all');
+        }
         if (in_array($additional['type'] ?? '', ['device_bits', 'port_bits'], true)) {
             $headers['X-Traffic-Direction'] = $request->input('traffic_direction', 'both');
         }
