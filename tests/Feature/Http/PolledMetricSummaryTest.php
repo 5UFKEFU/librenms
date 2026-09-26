@@ -37,7 +37,13 @@ class PolledMetricSummaryTest extends TestCase
         $device->setRelation('processors', new Collection([$processor]));
         $device->setRelation('mempools', new Collection([$pool]));
         $device->setRelation('diskIo', new Collection);
-        $device->setRelation('ports', new Collection);
+        $port = new \App\Models\Port;
+        $port->ifOperStatus = 'up';
+        $port->ifAdminStatus = 'up';
+        $port->ifType = 'ethernetCsmacd';
+        $port->ifInOctets_rate = 0;
+        $port->ifOutOctets_rate = 125;
+        $device->setRelation('ports', new Collection([$port]));
         $metrics = (new PolledDeviceMetricService($rrd))->read($device);
         $this->assertSame(23.0, $metrics['cpu']['value']);
         $this->assertSame(50.0, $metrics['memory']['value']);
@@ -46,5 +52,8 @@ class PolledMetricSummaryTest extends TestCase
         $this->assertFalse($metrics['load']['available']);
         $this->assertSame('poller_database_rrd', $metrics['source']);
         $this->assertNotNull($metrics['sampled_at']);
+        $this->assertTrue($metrics['network']['available']);
+        $this->assertEquals(0, $metrics['network']['in_bps']);
+        $this->assertEquals(1000, $metrics['network']['out_bps']);
     }
 }

@@ -42,7 +42,7 @@ class PolledDeviceMetricService
         foreach (LiveSnmpMetricService::selectDisks($device->diskIo->toArray()) as $disk) {
             $diskSamples[] = $this->rrd->latestAverages($this->rrd->filename($device->hostname, ['ucd_diskio', $disk['diskio_descr']]), ['read', 'written', 'reads', 'writes']);
         }
-        $ports = $device->ports->filter(fn ($p) => ! $p->deleted && ! $p->disabled && ! $p->ignore && $p->ifOperStatus === 'up' && $p->ifAdminStatus === 'up' && $p->ifType !== 'softwareLoopback');
+        $ports = $device->ports->filter(fn ($p) => ! $p->deleted && ! $p->disabled && ! $p->ignore && $p->ifOperStatus === \LibreNMS\Enum\IfOperStatus::Up && $p->ifAdminStatus === \LibreNMS\Enum\IfOperStatus::Up && $p->ifType !== 'softwareLoopback');
         $network = ['available' => $ports->isNotEmpty(), 'interface_count' => $ports->count(), 'sampled_at' => $date,
             'in_bps' => $ports->isEmpty() ? null : $ports->sum(fn ($p) => max(0, (float) $p->ifInOctets_rate)) * 8,
             'out_bps' => $ports->isEmpty() ? null : $ports->sum(fn ($p) => max(0, (float) $p->ifOutOctets_rate)) * 8];
