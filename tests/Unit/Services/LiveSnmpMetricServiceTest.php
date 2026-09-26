@@ -89,6 +89,51 @@ final class LiveSnmpMetricServiceTest extends TestCase
         $this->assertSame(4093640704, $metric['total_bytes']);
     }
 
+    public function test_disk_rates_use_elapsed_time_and_accept_idle_disks(): void
+    {
+        $disks = [['diskio_index' => 1, 'diskio_descr' => 'sda']];
+        $before = [1 => ['read' => '100', 'write' => '200', 'reads' => '10', 'writes' => '20', 'busy' => '0']];
+        $after = [1 => ['read' => '1100', 'write' => '2200', 'reads' => '20', 'writes' => '40', 'busy' => '1000000']];
+        $metric = $this->invoke('diskMetrics', [$before, $after, $disks, 5.0]);
+        $this->assertSame(200.0, $metric['read_bytes_per_second']);
+        $this->assertSame(400.0, $metric['write_bytes_per_second']);
+        $this->assertSame(2.0, $metric['read_iops']);
+        $this->assertSame(20.0, $metric['utilization_percent']);
+        $idle = $this->invoke('diskMetrics', [$before, $before, $disks, 5.0]);
+        $this->assertTrue($idle['available']);
+        $this->assertSame(0.0, $idle['read_bytes_per_second']);
+        $reset = $this->invoke('diskMetrics', [$after, $before, $disks, 5.0]);
+        $this->assertFalse($reset['available']);
+        $baseline = ['timestamp' => 10, 'disk' => $before];
+        $this->assertSame($baseline, $this->invoke('selectBaseline', [[$baseline], ['timestamp' => 15, 'disk' => $before], 3.0, 'disk']));
+    }
+
+    public function test_whole_disks_exclude_partitions_and_stacked_devices(): void
+    {
+        $rows = array_map(fn ($name) => ['diskio_descr' => $name], ['sda', 'sda1', 'nvme0n1', 'nvme0n1p1', 'md0', 'bcache0']);
+        $this->assertSame(['sda', 'nvme0n1'], array_column(LiveSnmpMetricService::selectDisks($rows), 'diskio_descr'));
+        $this->assertSame([['diskio_descr' => 'md0']], LiveSnmpMetricService::selectDisks([['diskio_descr' => 'md0']]));
+    }
+
+    public function test_load_average_is_not_a_percentage(): void
+    {
+        $metric = $this->invoke('loadMetrics', [['.1.3.6.1.4.1.2021.10.1.5.1' => '12345']]);
+        $this->assertSame(123.45, $metric['one']);
+        $this->assertNull($metric['five']);
+    }
+
+    public function test_optional_steal_is_included_in_cpu_denominator(): void
+    {
+        $before = array_fill_keys(['user', 'nice', 'system', 'idle', 'wait', 'steal'], '100');
+        $after = ['user' => '120', 'nice' => '105', 'system' => '115', 'idle' => '140', 'wait' => '110', 'steal' => '110'];
+        [$cpu, $wait] = $this->invoke('cpuMetrics', [$before, $after]);
+        $this->assertSame(25.0, $cpu['user']);
+        $this->assertSame(15.0, $cpu['system']);
+        $this->assertSame(10.0, $cpu['steal']);
+        $this->assertSame(50.0, $cpu['value']);
+        $this->assertSame(10.0, $wait['value']);
+    }
+
     private function invoke(string $method, array $arguments): mixed
     {
         return (new ReflectionMethod(LiveSnmpMetricService::class, $method))

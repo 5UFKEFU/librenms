@@ -18,12 +18,29 @@ class LiveSnmpMetricService
         'wait' => '.1.3.6.1.4.1.2021.11.54.0',
     ];
 
+    private const OPTIONAL_CPU_OIDS = ['steal' => '.1.3.6.1.4.1.2021.11.64.0'];
+    private const LOAD_OIDS = [
+        'one' => '.1.3.6.1.4.1.2021.10.1.5.1',
+        'five' => '.1.3.6.1.4.1.2021.10.1.5.2',
+        'fifteen' => '.1.3.6.1.4.1.2021.10.1.5.3',
+    ];
+    private const UPTIME_OID = '.1.3.6.1.2.1.1.3.0';
+    private const DISK_OIDS = [
+        'read' => '.1.3.6.1.4.1.2021.13.15.1.1.12',
+        'write' => '.1.3.6.1.4.1.2021.13.15.1.1.13',
+        'reads' => '.1.3.6.1.4.1.2021.13.15.1.1.5',
+        'writes' => '.1.3.6.1.4.1.2021.13.15.1.1.6',
+        'busy' => '.1.3.6.1.4.1.2021.13.15.1.1.14',
+    ];
+
     private const MEMORY_OIDS = [
         'total' => '.1.3.6.1.4.1.2021.4.5.0',
         'free' => '.1.3.6.1.4.1.2021.4.6.0',
         'buffers' => '.1.3.6.1.4.1.2021.4.14.0',
         'cached' => '.1.3.6.1.4.1.2021.4.15.0',
         'available' => '.1.3.6.1.4.1.2021.4.27.0',
+        'swap_total' => '.1.3.6.1.4.1.2021.4.3.0',
+        'swap_free' => '.1.3.6.1.4.1.2021.4.4.0',
     ];
 
     private const IF_HC_IN_OID = '.1.3.6.1.2.1.31.1.1.1.6';
@@ -58,18 +75,21 @@ class LiveSnmpMetricService
         try {
             $startedAt = microtime(true);
             $ports = $this->activePorts($device);
+            $disks = self::selectDisks($device->diskIo()->orderBy('diskio_index')->get(['diskio_index', 'diskio_descr'])->toArray());
             $hostResources = $device->os === 'routeros' ? $this->hostResourcesPlan($device) : null;
             $loadOids = $hostResources === null
-                ? array_merge(array_values(self::CPU_OIDS), array_values(self::MEMORY_OIDS))
+                ? array_merge(array_values(self::CPU_OIDS), array_values(self::OPTIONAL_CPU_OIDS), array_values(self::MEMORY_OIDS), array_values(self::LOAD_OIDS))
                 : array_merge($hostResources['processor_oids'], array_values($hostResources['memory_oids']));
-            $oids = array_values(array_unique(array_merge($loadOids, $this->networkOids($ports))));
+            $oids = array_values(array_unique(array_merge($loadOids, $this->networkOids($ports), $this->diskOids($disks), [self::UPTIME_OID])));
             $values = SnmpQuery::device($device)->numeric()->get($oids)->values();
             $sampledAt = microtime(true);
             $sample = [
                 'timestamp' => $sampledAt,
                 'sampled_at' => Carbon::createFromTimestampUTC($sampledAt)->toIso8601String(),
-                'cpu' => $hostResources === null ? $this->counterSnapshot($values, self::CPU_OIDS) : null,
+                'cpu' => $hostResources === null ? $this->cpuSnapshot($values) : null,
                 'network' => $this->networkCounterSnapshot($values, $ports),
+                'disk' => $this->diskSnapshot($values, $disks),
+                'uptime' => $this->numericValue($values, self::UPTIME_OID),
             ];
 
             $historyKey = $this->historyKey($device);
@@ -77,10 +97,23 @@ class LiveSnmpMetricService
             $history = is_array($history) ? array_values(array_filter($history, fn ($entry) => is_array($entry) && $sampledAt - (float) ($entry['timestamp'] ?? 0) <= self::MAX_WINDOW_SECONDS
             )) : [];
 
-            $latest = $this->cached($device);
+            // A reboot invalidates every counter baseline, including cached data.
+            $previous = $history === [] ? null : $history[array_key_last($history)];
+            $rebooted = isset($previous['uptime'], $sample['uptime']) && $sample['uptime'] < $previous['uptime'];
+            if ($rebooted) {
+                $history = [];
+            }
+            $latest = $rebooted ? $this->emptyMetrics() : $this->cached($device);
             $latest['source'] = 'live_snmp_cache';
             $latest['sampled_at'] = $sample['sampled_at'];
             $latest['duration_ms'] = (int) round(($sampledAt - $startedAt) * 1000);
+            $latest['load'] = $this->stamp($this->loadMetrics($values), $sample['sampled_at'], 0.0);
+            $latest['processor_count'] = $device->processors()->count() ?: null;
+            $diskBaseline = $this->selectBaseline($history, $sample, self::CPU_MIN_WINDOW_SECONDS, 'disk');
+            if ($diskBaseline !== null) {
+                $window = $sampledAt - (float) $diskBaseline['timestamp'];
+                $latest['disk'] = $this->stamp($this->diskMetrics($diskBaseline['disk'], $sample['disk'], $disks, $window), $sample['sampled_at'], $window);
+            }
 
             $memory = $hostResources === null
                 ? $this->memoryMetrics($values)
@@ -164,7 +197,7 @@ class LiveSnmpMetricService
             if (! is_array($candidate[$counter] ?? null) || ! is_array($current[$counter] ?? null)) {
                 continue;
             }
-            if ($candidate[$counter] === $current[$counter]) {
+            if ($counter !== 'disk' && $candidate[$counter] === $current[$counter]) {
                 continue;
             }
 
@@ -172,6 +205,114 @@ class LiveSnmpMetricService
         }
 
         return null;
+    }
+
+    /** Prefer whole physical disks; never sum them with their partitions/RAID aliases. */
+    public static function selectDisks(array $rows): array
+    {
+        $physical = array_values(array_filter($rows, fn ($row) => preg_match('/^(?:[shv]d[a-z]+|xvd[a-z]+|nvme\d+n\d+|mmcblk\d+)$/', $row['diskio_descr'])));
+        $selected = $physical ?: array_values(array_filter($rows, fn ($row) => ! preg_match('/^(?:loop|ram|zram)|^(?:[shv]d[a-z]+|xvd[a-z]+)\d+$|^(?:nvme\d+n\d+|mmcblk\d+)p\d+$/', $row['diskio_descr'])));
+
+        return array_slice($selected, 0, 16);
+    }
+
+    private function cpuSnapshot(array $values): ?array
+    {
+        $snapshot = $this->counterSnapshot($values, self::CPU_OIDS);
+        if ($snapshot === null) {
+            return null;
+        }
+        foreach (self::OPTIONAL_CPU_OIDS as $name => $oid) {
+            if (($value = $this->counterValue($values, $oid)) !== null) {
+                $snapshot[$name] = $value;
+            }
+        }
+
+        return $snapshot;
+    }
+
+    private function loadMetrics(array $values): array
+    {
+        $loads = [];
+        foreach (self::LOAD_OIDS as $name => $oid) {
+            $value = $this->numericValue($values, $oid);
+            $loads[$name] = $value !== null && $value >= 0 ? round($value / 100, 2) : null;
+        }
+
+        return ['available' => count(array_filter($loads, fn ($v) => $v !== null)) > 0] + $loads;
+    }
+
+    private function diskOids(array $disks): array
+    {
+        $oids = [];
+        foreach ($disks as $disk) {
+            foreach (self::DISK_OIDS as $oid) {
+                $oids[] = $oid . '.' . $disk['diskio_index'];
+            }
+        }
+
+        return $oids;
+    }
+
+    private function diskSnapshot(array $values, array $disks): array
+    {
+        $snapshot = [];
+        foreach ($disks as $disk) {
+            $row = [];
+            foreach (self::DISK_OIDS as $name => $oid) {
+                $row[$name] = $this->counterValue($values, $oid . '.' . $disk['diskio_index']);
+            }
+            if ($row['read'] !== null && $row['write'] !== null) {
+                $snapshot[(string) $disk['diskio_index']] = $row;
+            }
+        }
+
+        return $snapshot;
+    }
+
+    private function diskMetrics(array $before, array $after, array $disks, float $elapsed): array
+    {
+        $devices = [];
+        if ($elapsed <= 0) {
+            return ['available' => false, 'devices' => []];
+        }
+        foreach ($disks as $disk) {
+            $index = (string) $disk['diskio_index'];
+            if (! isset($before[$index], $after[$index])) {
+                continue;
+            }
+            $rates = [];
+            foreach (self::DISK_OIDS as $name => $_) {
+                $old = $before[$index][$name] ?? null;
+                $new = $after[$index][$name] ?? null;
+                $bits = in_array($name, ['reads', 'writes']) ? 32 : 64;
+                // Counter64 wrapping is not plausible here; reject resets. Only
+                // accept a Counter32 decrease near its actual wrap boundary.
+                $reset = $old !== null && $new !== null && (float) $new < (float) $old
+                    && ! ($bits === 32 && (float) $old > 4_000_000_000 && (float) $new < 1_000_000_000);
+                $rates[$name] = $old === null || $new === null || $reset ? null : max(0, Number::calculateRate($old, $new, 0, $elapsed, $bits));
+            }
+            if ($rates['read'] === null || $rates['write'] === null) {
+                continue;
+            }
+            $devices[] = [
+                'name' => $disk['diskio_descr'],
+                'read_bytes_per_second' => round($rates['read'], 2),
+                'write_bytes_per_second' => round($rates['write'], 2),
+                'read_iops' => $rates['reads'] !== null ? round($rates['reads'], 2) : null,
+                'write_iops' => $rates['writes'] !== null ? round($rates['writes'], 2) : null,
+                'utilization_percent' => $rates['busy'] !== null ? round(min(100, $rates['busy'] / 10000), 2) : null,
+            ];
+        }
+        $result = ['available' => $devices !== [], 'disk_count' => count($devices), 'devices' => $devices];
+        foreach (['read_bytes_per_second', 'write_bytes_per_second', 'read_iops', 'write_iops'] as $field) {
+            $values = array_column($devices, $field);
+            $result[$field] = $values !== [] && ! in_array(null, $values, true) ? round(array_sum($values), 2) : null;
+        }
+        $busy = array_column($devices, 'utilization_percent');
+        $result['utilization_percent'] = $busy !== [] && ! in_array(null, $busy, true) ? round(array_sum($busy) / count($busy), 2) : null;
+
+        return $result;
     }
 
     private function activePorts(Device $device): array
@@ -280,15 +421,23 @@ class LiveSnmpMetricService
         }
 
         // Wait is its own CPU state and must be included in the denominator.
+        if (isset($before['steal'], $after['steal'])) {
+            $deltas['steal'] = Number::calculateRate($before['steal'], $after['steal'], 0, 1, 32);
+        }
         $total = array_sum($deltas);
         if ($total <= 0) {
             return [$this->unavailableMetric('percent'), $this->unavailableMetric('percent')];
         }
 
-        $busy = ($deltas['user'] + $deltas['nice'] + $deltas['system']) / $total * 100;
+        $busy = ($deltas['user'] + $deltas['nice'] + $deltas['system'] + ($deltas['steal'] ?? 0)) / $total * 100;
         $wait = $deltas['wait'] / $total * 100;
 
-        return [$this->availableMetric($busy, 'percent'), $this->availableMetric($wait, 'percent')];
+        return [array_merge($this->availableMetric($busy, 'percent'), [
+            'user' => round(($deltas['user'] + $deltas['nice']) / $total * 100, 4),
+            'system' => round($deltas['system'] / $total * 100, 4),
+            'idle' => round($deltas['idle'] / $total * 100, 4),
+            'steal' => isset($deltas['steal']) ? round($deltas['steal'] / $total * 100, 4) : null,
+        ]), $this->availableMetric($wait, 'percent')];
     }
 
     private function memoryMetrics(array $values): array
@@ -306,9 +455,13 @@ class LiveSnmpMetricService
         }
         $availableKb = min($totalKb, max(0, $availableKb));
         $usedKb = $totalKb - $availableKb;
+        $swapTotal = $this->numericValue($values, self::MEMORY_OIDS['swap_total']);
+        $swapFree = $this->numericValue($values, self::MEMORY_OIDS['swap_free']);
 
         return array_merge($this->availableMetric($usedKb / $totalKb * 100, 'percent'), [
             'used_bytes' => (int) round($usedKb * 1024),
+            'cached_bytes' => ($cached = $this->numericValue($values, self::MEMORY_OIDS['cached'])) !== null ? (int) round(max(0, $cached) * 1024) : null,
+            'swap_used_bytes' => $swapTotal !== null && $swapFree !== null ? (int) round(max(0, $swapTotal - $swapFree) * 1024) : null,
             'total_bytes' => (int) round($totalKb * 1024),
         ]);
     }
@@ -392,6 +545,9 @@ class LiveSnmpMetricService
             'source' => 'cache_empty',
             'sampled_at' => null,
             'duration_ms' => 0,
+            'processor_count' => null,
+            'load' => ['available' => false, 'one' => null, 'five' => null, 'fifteen' => null],
+            'disk' => ['available' => false, 'devices' => []],
             'cpu' => $this->unavailableMetric('percent'),
             'memory' => $this->unavailableMetric('percent'),
             'io_wait' => $this->unavailableMetric('percent'),
