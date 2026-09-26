@@ -150,7 +150,7 @@ foreach ($rrd_list ?? [] as $rrd) {
 
     if (! $nodetails) {
         $descr = LibreNMS\Data\Store\Rrd::fixedSafeDescr($rrd['descr'], $rrddescr_len) . '  In';
-        $descr_out = LibreNMS\Data\Store\Rrd::fixedSafeDescr('', $rrddescr_len) . ' Out';
+        $descr_out = LibreNMS\Data\Store\Rrd::fixedSafeDescr($graph_params->trafficDirection === 'out' ? $rrd['descr'] : '', $rrddescr_len) . ' Out';
     }
 
     $rrd_options[] = 'AREA:inbits' . $i . '#' . $colour_in . $stacked['transparency'] . ":$descr$stack";
@@ -261,7 +261,7 @@ if (! $nototal && ! empty($rrd_list)) {
     }
     $rrd_options[] = 'COMMENT:\\n';
 
-    $rrd_options[] = 'HRULE:999999999999990#FFFFFF:' . LibreNMS\Data\Store\Rrd::fixedSafeDescr('', $rrddescr_len) . ' Out';
+    $rrd_options[] = 'HRULE:999999999999990#FFFFFF:' . LibreNMS\Data\Store\Rrd::fixedSafeDescr($graph_params->trafficDirection === 'out' ? 'Total' : '', $rrddescr_len) . ' Out';
     $rrd_options[] = 'GPRINT:outbits:LAST:%6.' . $float_precision . "lf%s$units";
     $rrd_options[] = 'GPRINT:outbits:AVERAGE:%6.' . $float_precision . "lf%s$units";
     $rrd_options[] = 'GPRINT:outbits:MAX:%6.' . $float_precision . "lf%s$units";

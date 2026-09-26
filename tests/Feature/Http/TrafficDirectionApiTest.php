@@ -17,6 +17,22 @@ class TrafficDirectionApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function testOutboundDeviceGraphKeepsInterfaceAndTotalLabels(): void
+    {
+        Role::findOrCreate('admin');
+        $this->actingAs(User::factory()->create(['enabled' => 1])->assignRole('admin'));
+        LibrenmsConfig::set('auth_mechanism', 'mysql');
+        $device = Device::factory()->create();
+        Port::factory()->for($device)->create(['ifName' => 'eth0', 'ifDescr' => 'eth0', 'disabled' => 0, 'deleted' => 0]);
+        Port::factory()->for($device)->create(['ifName' => 'eth1', 'ifDescr' => 'eth1', 'disabled' => 0, 'deleted' => 0]);
+        Rrd::partialMock()->shouldReceive('checkRrdExists')->andReturn(true);
+        $options = Graph::getRrdOptions(['type' => 'device_bits', 'id' => $device->device_id, 'width' => 1100, 'height' => 420, 'traffic_direction' => 'out', 'traffic_same_axis' => 1]);
+        $labels = implode("\n", array_filter($options, fn (string $option) => str_starts_with($option, 'HRULE:')));
+        $this->assertMatchesRegularExpression('/eth0\s+Out/', $labels);
+        $this->assertMatchesRegularExpression('/Total\s+Out/', $labels);
+        $this->assertStringNotContainsString('  In', $labels);
+    }
+
     public function testPortFilteringKeepsDefinitionsAndAcknowledgesEachDirection(): void
     {
         Role::findOrCreate('admin');
