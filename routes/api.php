@@ -12,6 +12,8 @@
 */
 
 Route::prefix('v0')->group(function (): void {
+    Route::get('me/mobile-dashboard', [App\Api\Controllers\MobileDashboardController::class, 'show']);
+    Route::put('me/mobile-dashboard', [App\Api\Controllers\MobileDashboardController::class, 'update']);
     Route::get('ping', fn () => response()->json(['message' => 'pong']))->name('ping');
     Route::get('system', [App\Api\Controllers\LegacyApiController::class, 'server_info'])->name('server_info');
     Route::get('', [App\Api\Controllers\LegacyApiController::class, 'show_endpoints']);
