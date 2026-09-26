@@ -39,7 +39,7 @@ class TrafficGraphStyleTest extends TestCase
             'AREA:inbits0#CDEB8B88:In',
             'AREA:inbits1#CDEB8B88::STACK',
             'AREA:outbits0_neg#C3D9FF88:',
-            'AREA:outbits1_neg#C3D9FF88::STACK',
+            'AREA:outbits1_neg#ABCDEF88::STACK',
             'HRULE:999999999999999#C3D9FF:Out',
             'GPRINT:outbits0:LAST:%6.2lf%s',
             'LINE1:percentile_in#aa0000',
@@ -48,13 +48,27 @@ class TrafficGraphStyleTest extends TestCase
         ];
         $styled = TrafficGraphStyle::sameAxis($options);
         $this->assertSame('LINE2:inbits0#00A6ED:In', $styled[1]);
-        $this->assertSame('LINE2:inbits1#00A6ED::STACK', $styled[2]);
+        $this->assertSame('LINE2:inbits1#00C49A::STACK', $styled[2]);
         $this->assertSame('LINE2:outbits0_neg#FF8C00::dashes=6,3', $styled[3]);
-        $this->assertSame('LINE2:outbits1_neg#FF8C00::STACK:dashes=6,3', $styled[4]);
+        $this->assertSame('LINE2:outbits1_neg#F06292::STACK:dashes=6,3', $styled[4]);
         $this->assertSame('HRULE:999999999999999#FF8C00:Out', $styled[5]);
         foreach ([0, 6, 7, 8, 9] as $index) {
             $this->assertSame($options[$index], $styled[$index]);
         }
+    }
+
+    public function testInterfaceColorsRemainDistinctAndMatchLegendSwatches(): void
+    {
+        $options = ['AREA:inbits0#112233:eth0 In', 'AREA:inbits1#445566:eth1 In',
+            'AREA:outbits0_neg#778899:', 'AREA:outbits1_neg#AABBCC:',
+            'HRULE:999999999999999#778899:eth0 Out', 'HRULE:999999999999999#AABBCC:eth1 Out'];
+        $styled = TrafficGraphStyle::sameAxis($options);
+        $this->assertStringContainsString('#00C49A', $styled[1]);
+        $this->assertStringContainsString('#F06292', $styled[3]);
+        $this->assertStringContainsString('#FF8C00', $styled[4]);
+        $this->assertStringContainsString('#F06292', $styled[5]);
+        $this->assertSame($styled, TrafficGraphStyle::sameAxis($styled));
+        $this->assertStringContainsString('#F06292', implode("\n", TrafficGraphStyle::direction($styled, 'out')));
     }
 
     public function testHistoricalAndMaximumLinesAreSecondaryAndStylingIsIdempotent(): void

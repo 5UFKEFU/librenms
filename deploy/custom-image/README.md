@@ -45,3 +45,12 @@ backup of the Compose file, replace only the web service image, and run
 database and Redis services. Clear compiled views if applying files to an
 already running web container. Verify both switch states and persistence after
 reload before accepting the release.
+
+When updating the graph API on an older customized image, retain the personal
+preference UI too: `UserPreferencesController`, `user/preferences.blade.php`,
+the three preference translations, and the shared graph renderers must ship
+together. Verify the Preferences page renders its switch, both values persist,
+and the default graph request follows that user's choice. API clients may
+explicitly pass `traffic_same_axis=0` to retain the legacy mirrored rendering
+regardless of the website preference. Same-axis multi-interface graphs use
+separate interface colors, solid incoming strokes, and dashed outgoing strokes.

@@ -104,6 +104,13 @@ class TrafficGraphStyle
 
     private static function color(string $series): string
     {
-        return self::outgoing($series) ? 'FF8C00' : '00A6ED';
+        // Keep each interface distinct and retain its color across direction filters,
+        // time ranges, historical comparisons and maximum overlays.
+        $incoming = ['00A6ED', '00C49A', 'AF7AC5', 'FFCF40', '5DADE2', 'E85D75', '7CB342', 'EC7DBB'];
+        $outgoing = ['FF8C00', 'F06292', '9C6ADE', 'F6BF26', '8D6E63', '26C6DA', 'EF5350', 'AB47BC'];
+        preg_match('/^(?:d?out|in)[a-z_]*?(\d+)/i', $series, $match);
+        $palette = self::outgoing($series) ? $outgoing : $incoming;
+
+        return $palette[(int) ($match[1] ?? 0) % count($palette)];
     }
 }
