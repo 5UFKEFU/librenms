@@ -124,6 +124,7 @@ function api_get_graph(Request $request, array $additional = [])
     $request->validate([
         'traffic_direction' => 'sometimes|in:in,out,both',
         'disk_scope' => 'sometimes|in:all,physical',
+        'graph_series' => ['sometimes', 'string', 'max:128', 'regex:/^[a-zA-Z0-9_]+$/'],
         'traffic_same_axis' => 'sometimes|boolean',
     ]);
 
@@ -147,6 +148,7 @@ function api_get_graph(Request $request, array $additional = [])
             'previous',
             'duration',
             'disk_scope',
+            'graph_series',
             'traffic_direction',
             'traffic_same_axis',
         ]);

@@ -1276,6 +1276,23 @@ These controls also apply to `/api/v0/devices/:hostname/device_bits`.
 Successful binary responses include `X-Traffic-Direction: in|out|both` so
 clients can detect servers that do not yet implement direction filtering.
 
+For device CPU (`device_processor`), load (`device_ucd_load`), disk throughput
+(`device_diskio_bits`) and IOPS (`device_diskio_ops`) graphs, SVG responses
+include `<metadata id="librenms-series">` with JSON `keys` in colored legend
+marker order and `selected: null`. Null keys are not selectable. Clients must
+match the complete marker count before mapping keys to legend rows.
+
+Pass a returned key as `graph_series` to redraw that series with an automatic
+Y-axis range and no stacking. Selected CPU cores use their original utilization,
+not their divided contribution to the aggregate. The returned metadata echoes
+`selected`; omit the parameter to restore the original graph. Keep the original
+legend in the client for switching/restoring series. Unknown keys are rejected.
+Graphs from older servers without metadata retain their existing behavior.
+
+Disk graphs additionally accept `disk_scope=physical` to include only whole
+physical-device names and explicit Read/Write labels. The default `all` retains
+legacy disk graphs. Binary responses acknowledge the scope in `X-Disk-Scope`.
+
 
 Example:
 

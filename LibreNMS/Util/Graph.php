@@ -33,6 +33,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use LibreNMS\Data\Graphing\GraphImage;
 use LibreNMS\Data\Graphing\GraphParameters;
+use LibreNMS\Data\Graphing\GraphSeriesSelection;
 use LibreNMS\Enum\ImageFormat;
 use LibreNMS\Exceptions\RrdGraphException;
 use Rrd;
@@ -102,12 +103,16 @@ class Graph
      */
     public static function get($vars): GraphImage
     {
-        $graph_params = new GraphParameters(is_string($vars) ? Url::parseLegacyPathVars($vars) : $vars);
+        $vars = is_string($vars) ? Url::parseLegacyPathVars($vars) : $vars;
+        $graph_params = new GraphParameters($vars);
         $rrd_options = self::getRrdOptions($vars, $rrd_filename);
 
         // Generating the graph!
         try {
             $image_data = Rrd::graph($rrd_options);
+            if ($graph_params->imageFormat === ImageFormat::Svg && GraphSeriesSelection::supports($vars['type'] ?? '')) {
+                $image_data = GraphSeriesSelection::metadata($image_data, $rrd_options, $vars['type'], $vars['graph_series'] ?? null);
+            }
 
             return new GraphImage($graph_params->imageFormat, $graph_params->getTitle(), $image_data);
         } catch (RrdGraphException $e) {
@@ -214,7 +219,15 @@ class Graph
                 $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::direction($rrd_options, $graph_params->trafficDirection);
             }
 
-            return [...$graph_params->toRrdOptions(), ...$rrd_options];
+            $options = [...$graph_params->toRrdOptions(), ...$rrd_options];
+            if (isset($vars['graph_series'])) {
+                if (! GraphSeriesSelection::supports($vars['type'] ?? '')) {
+                    throw new RrdGraphException('Series selection is not supported for this graph', 'Unsupported series');
+                }
+                $options = GraphSeriesSelection::select($options, $vars['type'], $vars['graph_series']);
+            }
+
+            return $options;
         } finally {
             if ($previousCwd !== false) {
                 chdir($previousCwd);

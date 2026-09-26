@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use LibreNMS\Tests\TestCase;
+use LibreNMS\Data\Graphing\GraphSeriesSelection;
 use LibreNMS\Util\Graph;
 use Spatie\Permission\Models\Role;
 
@@ -44,6 +45,19 @@ class DiskGraphScopeApiTest extends TestCase
             $this->assertMatchesRegularExpression('/sda\s+Write/', $filtered);
             $response = api_get_graph(Request::create('/graph', 'GET', ['disk_scope' => 'physical']), $vars);
             $this->assertSame('physical', $response->headers->get('X-Disk-Scope'));
+            $options = Graph::getRrdOptions($vars + ['disk_scope' => 'physical']);
+            $entries = GraphSeriesSelection::entries($options, $type);
+            $this->assertCount(4, $entries);
+            foreach ($entries as $entry) {
+                $solo = Graph::getRrdOptions($vars + ['disk_scope' => 'physical', 'graph_series' => $entry['key']]);
+                $draws = array_filter($solo, fn ($option) => is_string($option) && preg_match('/^(AREA|LINE[0-9.]*):/', $option));
+                $this->assertCount(1, $draws);
+                $this->assertStringNotContainsString('STACK', implode(' ', $draws));
+                $this->assertContains('--alt-autoscale', $solo);
+            }
+            $metadata = GraphSeriesSelection::metadata('<svg></svg>', $options, $type, null);
+            $this->assertStringContainsString('librenms-series', $metadata);
+            $this->assertStringContainsString($entries[1]['key'], $metadata);
         }
     }
 }
