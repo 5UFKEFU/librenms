@@ -16,12 +16,18 @@ class CurrentRrdMetricService
     ) {
     }
 
-    public function filename(string $hostname, string $rrdName): string
+    public function filename(string $hostname, string|array $rrdName): string
     {
         return $this->rrd->name($hostname, $rrdName);
     }
 
     public function latestAverage(string $filename, string $dataset = 'value', ?int $now = null): ?TimeSeriesPoint
+    {
+        return $this->latestAverages($filename, [$dataset], $now)[$dataset] ?? null;
+    }
+
+    /** Fetch one RRD once even when several datasets are needed. */
+    public function latestAverages(string $filename, array $datasets, ?int $now = null): array
     {
         $now ??= time();
         $step = (int) LibrenmsConfig::get('rrd.step', 300);
@@ -38,10 +44,15 @@ class CurrentRrdMetricService
         try {
             $output = $this->rrdProcess->run($command);
         } catch (RrdException) {
-            return null;
+            return [];
         }
 
-        return self::parseLatestValue($output, $dataset, $now, $maxAge);
+        $result = [];
+        foreach ($datasets as $dataset) {
+            $result[$dataset] = self::parseLatestValue($output, $dataset, $now, $maxAge);
+        }
+
+        return $result;
     }
 
     public static function parseLatestValue(string $output, string $dataset, int $now, int $maxAge): ?TimeSeriesPoint

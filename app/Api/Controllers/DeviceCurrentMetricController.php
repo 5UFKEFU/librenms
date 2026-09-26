@@ -31,6 +31,17 @@ class DeviceCurrentMetricController extends Controller
     ) {
     }
 
+    public function summary(string $hostname): JsonResponse
+    {
+        $device = $this->findDevice($hostname);
+        $this->authorize('view', $device);
+        $metrics = Cache::remember("polled-metric-summary:v1:{$device->device_id}", 30,
+            fn () => app(\App\Services\PolledDeviceMetricService::class)->read($device));
+
+        return response()->json(['status' => 'ok', 'device_id' => (int) $device->device_id,
+            'hostname' => $device->hostname, 'sampled_at' => $metrics['sampled_at'], 'metrics' => $metrics]);
+    }
+
     /**
      * Return the most recent device-scoped SNMP sample without waiting for SNMP.
      *

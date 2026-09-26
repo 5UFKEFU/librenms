@@ -47,3 +47,5 @@ COPY --chown=librenms:librenms includes/html/graphs/generic_data.inc.php /opt/li
 
 USER root
 RUN rm -f /opt/librenms/bootstrap/cache/routes.php /opt/librenms/bootstrap/cache/routes-*.php
+
+COPY --chown=librenms:librenms app/Services/PolledDeviceMetricService.php /opt/librenms/app/Services/PolledDeviceMetricService.php
