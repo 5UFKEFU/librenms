@@ -318,7 +318,7 @@ class LiveSnmpMetricService
     private function activePorts(Device $device): array
     {
         return $device->ports()
-            ->select(['ifIndex', 'ifName'])
+            ->select(['port_id', 'ifIndex', 'ifName'])
             ->where('deleted', 0)
             ->where('disabled', 0)
             ->where('ignore', 0)
@@ -329,7 +329,7 @@ class LiveSnmpMetricService
             ->orderByDesc('ifSpeed')
             ->limit(self::MAX_INTERFACES)
             ->get()
-            ->map(fn ($port) => ['if_index' => (int) $port->ifIndex, 'name' => (string) $port->ifName])
+            ->map(fn ($port) => ['port_id' => (int) $port->port_id, 'if_index' => (int) $port->ifIndex, 'name' => (string) $port->ifName])
             ->all();
     }
 
@@ -508,13 +508,22 @@ class LiveSnmpMetricService
         $inOctetsPerSecond = 0.0;
         $outOctetsPerSecond = 0.0;
         $sampledInterfaces = 0;
+        $interfaces = [];
         foreach ($ports as $port) {
             $index = (string) $port['if_index'];
             if (! isset($before[$index], $after[$index])) {
                 continue;
             }
-            $inOctetsPerSecond += Number::calculateRate($before[$index]['in'], $after[$index]['in'], 0, $elapsed, 64);
-            $outOctetsPerSecond += Number::calculateRate($before[$index]['out'], $after[$index]['out'], 0, $elapsed, 64);
+            $inRate = Number::calculateRate($before[$index]['in'], $after[$index]['in'], 0, $elapsed, 64);
+            $outRate = Number::calculateRate($before[$index]['out'], $after[$index]['out'], 0, $elapsed, 64);
+            $inOctetsPerSecond += $inRate;
+            $outOctetsPerSecond += $outRate;
+            $interfaces[] = [
+                'port_id' => (int) ($port['port_id'] ?? 0),
+                'name' => $port['name'],
+                'in_bps' => round(max(0, $inRate * 8), 2),
+                'out_bps' => round(max(0, $outRate * 8), 2),
+            ];
             $sampledInterfaces++;
         }
 
@@ -528,6 +537,7 @@ class LiveSnmpMetricService
             'out_bps' => round(max(0, $outOctetsPerSecond * 8), 2),
             'interface_count' => count($ports),
             'sampled_interface_count' => $sampledInterfaces,
+            'interfaces' => $interfaces,
         ];
     }
 
@@ -563,6 +573,7 @@ class LiveSnmpMetricService
             'out_bps' => null,
             'interface_count' => $interfaceCount,
             'sampled_interface_count' => 0,
+            'interfaces' => [],
         ];
     }
 

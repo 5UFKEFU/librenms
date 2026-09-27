@@ -27,12 +27,13 @@ final class LiveSnmpMetricServiceTest extends TestCase
         $network = $this->invoke('networkMetrics', [
             ['7' => ['in' => '1000', 'out' => '2000']],
             ['7' => ['in' => '10001000', 'out' => '20002000']],
-            [['if_index' => 7, 'name' => 'eth0']],
+            [['port_id' => 42, 'if_index' => 7, 'name' => 'eth0']],
             10.0,
         ]);
 
         $this->assertSame(8_000_000.0, $network['in_bps']);
         $this->assertSame(16_000_000.0, $network['out_bps']);
+        $this->assertSame([['port_id' => 42, 'name' => 'eth0', 'in_bps' => 8_000_000.0, 'out_bps' => 16_000_000.0]], $network['interfaces']);
     }
 
     #[Test]

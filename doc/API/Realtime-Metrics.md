@@ -19,3 +19,9 @@ Older devices and servers can omit the new data. Clients should retain the exist
 `GET /api/v0/devices/:hostname/metrics/summary` is a permission-checked, read-only snapshot of the poller's database and recent RRD values. It returns `status`, `device_id`, `hostname`, `sampled_at` and `metrics` using the realtime metric shape. It never initiates SNMP. Responses are cached for 30 seconds. CPU states require aligned timestamps; Load is scaled from the stored UCD values; disk RRD datasets are already bytes/second and operations/second. Missing data remains unavailable, while recorded zero rates remain zero. Disk aggregation uses the same physical-disk selection as realtime sampling and reports `disk_count` and `partial`. Disk sample time is the oldest contributing sample. RRD data outside the existing recent-sample window is not presented as current.
 
 Storage capacity is separate from disk I/O. The mobile overview shows used/total capacity of the root filesystem `/`, not the sum of all physical disks.
+
+## Per-interface live network samples
+
+The `network` object in realtime and live-network responses now includes optional `interfaces`, an array of `{port_id, name, in_bps, out_bps}`. Rates are **bits per second**, measured from the same counter window as the aggregate. Use the parent `network.sampled_at` to deduplicate samples. Only successfully sampled active, enabled, non-loopback interfaces are included, subject to the existing interface limit; a missing interface is not a zero-rate sample. An unavailable sample returns an empty array. Older servers omit the field; clients should retain aggregate support and indicate that per-interface live charts require an updated server.
+
+This is an additive response change. It does not add SNMP requests, change totals, or modify database polling values.
