@@ -1,5 +1,7 @@
 # LibreNMS custom API image
 
+For the verified 5UF/FEB deployment, server access, container inventory and recovery details, start with [the 2026-10-01 deployment handoff](../releases/2026-10-01-5uf-alignment.md). The build instructions below describe historical overlay packaging; they do not reproduce the complete image used by that deployment.
+
 This image keeps the official LibreNMS container runtime and adds the sensor
 threshold API and current device metrics implemented in this fork. The base
 image is pinned by digest so the deployed application is reproducible.
