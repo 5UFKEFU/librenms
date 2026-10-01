@@ -36,6 +36,7 @@ use LibreNMS\Data\Graphing\GraphParameters;
 use LibreNMS\Data\Graphing\GraphSeriesSelection;
 use LibreNMS\Enum\ImageFormat;
 use LibreNMS\Exceptions\RrdGraphException;
+use LibreNMS\RRD\RrdPath;
 use Rrd;
 
 class Graph
@@ -133,12 +134,12 @@ class Graph
      * Build RRD options for the given $vars
      *
      * @param  array|string  $vars
-     * @param  string|null  &$rrd_filename  output parameter for the resolved rrd filename
+     * @param  RrdPath|null  &$rrd_filename  output parameter for the resolved rrd filename
      * @return array
      *
      * @throws RrdGraphException
      */
-    public static function getRrdOptions($vars, ?string &$rrd_filename = null): array
+    public static function getRrdOptions($vars, ?RrdPath &$rrd_filename = null): array
     {
         if (! defined('IGNORE_ERRORS')) {
             define('IGNORE_ERRORS', true);
