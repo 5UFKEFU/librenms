@@ -62,6 +62,8 @@ class GraphParameters implements \Stringable
 
     public readonly ?bool $trafficSameAxis;
     public readonly string $trafficDirection;
+    /** 'cacti' draws total inbound as a green area and total outbound as a blue line. */
+    public readonly string $trafficStyle;
     public readonly bool $supportsTrafficDirection;
     public readonly bool $physicalDisksOnly;
 
@@ -103,6 +105,7 @@ class GraphParameters implements \Stringable
             ? $vars['traffic_direction'] : 'both';
         $this->trafficSameAxis = $this->supportsTrafficDirection && isset($vars['traffic_same_axis'])
             ? filter_var($vars['traffic_same_axis'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
+        $this->trafficStyle = $this->supportsTrafficDirection && ($vars['traffic_style'] ?? '') === 'cacti' ? 'cacti' : 'default';
 
         $this->width = (int) ($vars['width'] ?? 400);
         $this->height = (int) ($vars['height'] ?? $this->width / 3);
@@ -112,7 +115,9 @@ class GraphParameters implements \Stringable
         $this->style = $vars['style'] ?? '';
         $this->font = LibrenmsConfig::get('mono_font');
         $this->font_color = Clean::alphaDash($vars['font'] ?? '');
-        $this->font_size = $this->width <= self::MEDIUM_SMALL ? 7 : 8;
+        // Clients drawing large graphs may ask for larger text; the axis uses one size less.
+        $requestedFontSize = filter_var($vars['font_size'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 6, 'max_range' => 16]]);
+        $this->font_size = $requestedFontSize ?: ($this->width <= self::MEDIUM_SMALL ? 7 : 8);
 
         $this->canvas = Clean::alphaDash($vars['bg'] ?? '');
         $this->background = Clean::alphaDash($vars['bbg'] ?? '');

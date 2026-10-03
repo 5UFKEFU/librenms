@@ -126,6 +126,9 @@ function api_get_graph(Request $request, array $additional = [])
         'disk_scope' => 'sometimes|in:all,physical',
         'graph_series' => ['sometimes', 'string', 'max:128', 'regex:/^[a-zA-Z0-9_]+$/'],
         'traffic_same_axis' => 'sometimes|boolean',
+        'traffic_style' => 'sometimes|in:default,cacti',
+        'font_size' => 'sometimes|integer|between:6,16',
+        'timezone' => 'sometimes|timezone:all',
     ]);
 
     try {
@@ -151,7 +154,15 @@ function api_get_graph(Request $request, array $additional = [])
             'graph_series',
             'traffic_direction',
             'traffic_same_axis',
+            'traffic_style',
+            'font_size',
         ]);
+
+        // API clients have no web session, so rrdtool would otherwise label the
+        // time axis in the server's zone instead of the viewer's.
+        if ($request->filled('timezone')) {
+            config(['librenms.graph_timezone' => $request->input('timezone')]);
+        }
 
         $graph = Graph::get([
             'width' => $request->input('width', 1075),
