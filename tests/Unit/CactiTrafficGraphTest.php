@@ -25,11 +25,12 @@ class CactiTrafficGraphTest extends TestCase
     public function testCactiStyleTotalsInterfacesAsGreenInboundAreaAndBlueOutboundLine(): void
     {
         $options = $this->cactiOptions(['type' => 'device_bits', 'traffic_style' => 'cacti']);
-        $this->assertContains('CDEF:inbits=inoctets0,UN,0,inoctets0,IF,inoctets1,UN,0,inoctets1,IF,+,8,*', $options);
-        $this->assertContains('CDEF:outbits=outoctets0,UN,0,outoctets0,IF,outoctets1,UN,0,outoctets1,IF,+,8,*', $options);
-        $this->assertContains('AREA:inbits#00CF00:In\ ', $options);
+        $this->assertContains('CDEF:inbits=inoctets0,inoctets1,ADDNAN,8,*', $options);
+        $this->assertContains('CDEF:outbits=outoctets0,outoctets1,ADDNAN,8,*', $options);
+        $this->assertContains('AREA:inbits#00CF00:In ', $options);
         $this->assertContains('LINE1.5:outbits#002A97:Out', $options);
         $this->assertContains('GPRINT:outbits:MAX:%6.2lf%s', $options);
+        $this->assertContains('GPRINT:percentile_out:%6.2lf%s\\n', $options, 'One escape level, so no backslash is printed');
         $this->assertEmpty(array_filter($options, fn ($option) => str_contains($option, 'doutbits')),
             'Outbound shares the inbound axis instead of being mirrored below it');
     }

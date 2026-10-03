@@ -16,15 +16,17 @@ $out_parts = [];
 foreach (array_values($rrd_list ?? []) as $i => $rrd) {
     $rrd_options[] = 'DEF:inoctets' . $i . '=' . $rrd['filename'] . ':' . $rrd['ds_in'] . ':AVERAGE';
     $rrd_options[] = 'DEF:outoctets' . $i . '=' . $rrd['filename'] . ':' . $rrd['ds_out'] . ':AVERAGE';
-    $in_parts[] = 'inoctets' . $i . ',UN,0,inoctets' . $i . ',IF';
-    $out_parts[] = 'outoctets' . $i . ',UN,0,outoctets' . $i . ',IF';
+    $in_parts[] = 'inoctets' . $i;
+    $out_parts[] = 'outoctets' . $i;
 }
 
 if (empty($in_parts)) {
     throw new \LibreNMS\Exceptions\RrdGraphException('No Ports');
 }
 
-$sum = fn (array $parts) => implode(',', $parts) . str_repeat(',+', count($parts) - 1);
+// ADDNAN skips an interface without a sample, but a time with no samples at
+// all stays unknown, so "Now" is the latest real total rather than zero.
+$sum = fn (array $parts) => implode(',', $parts) . str_repeat(',ADDNAN', count($parts) - 1);
 $rrd_options[] = 'CDEF:inbits=' . $sum($in_parts) . ',8,*';
 $rrd_options[] = 'CDEF:outbits=' . $sum($out_parts) . ',8,*';
 $rrd_options[] = 'VDEF:percentile_in=inbits,' . $percentile . ',PERCENT';
@@ -38,7 +40,7 @@ if ($legend_rows) {
 
 $series = [];
 if ($direction !== 'out') {
-    $series[] = ['inbits', 'percentile_in', 'AREA:inbits#00CF00', 'In\ '];
+    $series[] = ['inbits', 'percentile_in', 'AREA:inbits#00CF00', 'In '];
 }
 if ($direction !== 'in') {
     $series[] = ['outbits', 'percentile_out', 'LINE1.5:outbits#002A97', 'Out'];
@@ -50,6 +52,6 @@ foreach ($series as [$name, $percentile_name, $draw, $label]) {
         $rrd_options[] = 'GPRINT:' . $name . ':LAST:%6.' . $float_precision . 'lf%s';
         $rrd_options[] = 'GPRINT:' . $name . ':AVERAGE:%6.' . $float_precision . 'lf%s';
         $rrd_options[] = 'GPRINT:' . $name . ':MAX:%6.' . $float_precision . 'lf%s';
-        $rrd_options[] = 'GPRINT:' . $percentile_name . ':%6.' . $float_precision . 'lf%s\\\\n';
+        $rrd_options[] = 'GPRINT:' . $percentile_name . ':%6.' . $float_precision . 'lf%s\\n';
     }
 }
