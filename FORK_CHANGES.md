@@ -73,12 +73,6 @@ than including the downstream container packaging in an unrelated change:
   removes unsafe guessed low-temperature limits and migrates legacy guesses.
 - [librenms/librenms#20355](https://github.com/librenms/librenms/pull/20355)
   adds the permission-checked single and bulk sensor threshold API.
-- [librenms/librenms#20753](https://github.com/librenms/librenms/pull/20753)
-  returns an ok status when the API renames a device.
-- [librenms/librenms#20754](https://github.com/librenms/librenms/pull/20754)
-  fixes the class-level port update authorization for non-admin API users.
-- [librenms/librenms#20755](https://github.com/librenms/librenms/pull/20755)
-  adds the validated `timezone` parameter to the graph API.
 
 ## Personal traffic graph layout
 
