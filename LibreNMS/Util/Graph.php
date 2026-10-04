@@ -212,12 +212,11 @@ class Graph
                 throw new RrdGraphException('Graph Definition Error', 'Def Error', $width, $height);
             }
 
-            // The Cacti style draws its own axis, colours and direction.
-            if ($graph_params->usesTrafficRestyling() && generate_stacked_graphs(false, '88', $graph_params->trafficSameAxis)['stacked'] === '1') {
+            if (generate_stacked_graphs(false, '88', $graph_params->trafficSameAxis)['stacked'] === '1') {
                 $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::sameAxis($rrd_options);
             }
 
-            if ($graph_params->usesTrafficRestyling() && $graph_params->supportsTrafficDirection) {
+            if ($graph_params->supportsTrafficDirection) {
                 $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::direction($rrd_options, $graph_params->trafficDirection);
             }
 

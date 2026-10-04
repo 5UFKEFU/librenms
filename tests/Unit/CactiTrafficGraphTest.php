@@ -35,17 +35,6 @@ class CactiTrafficGraphTest extends TestCase
             'Outbound shares the inbound axis instead of being mirrored below it');
     }
 
-    public function testSharedTrafficRestylingSkipsTheCactiStyle(): void
-    {
-        // The app sends traffic_same_axis=1 with the Cacti style; the shared
-        // rewriting recoloured the green area and blue line into the default style.
-        $cacti = new GraphParameters(['type' => 'device_bits', 'traffic_style' => 'cacti', 'traffic_same_axis' => '1', 'traffic_direction' => 'both']);
-        $this->assertFalse($cacti->usesTrafficRestyling());
-        $this->assertTrue((new GraphParameters(['type' => 'device_bits', 'traffic_same_axis' => '1']))->usesTrafficRestyling());
-        $this->assertTrue((new GraphParameters(['type' => 'device_processor', 'traffic_style' => 'cacti']))->usesTrafficRestyling(),
-            'Only traffic graphs have a Cacti style');
-    }
-
     public function testCactiStyleHonoursASingleDirection(): void
     {
         $inbound = implode("\n", $this->cactiOptions(['type' => 'port_bits', 'traffic_style' => 'cacti', 'traffic_direction' => 'in']));

@@ -145,15 +145,6 @@ class GraphParameters implements \Stringable
         $this->out = $this->inverse ? 'in' : 'out';
     }
 
-    /**
-     * Whether the shared same-axis and direction rewriting applies. Cacti-style
-     * traffic graphs build their own definition, which that rewriting would recolour.
-     */
-    public function usesTrafficRestyling(): bool
-    {
-        return $this->trafficStyle !== 'cacti';
-    }
-
     public function visible(string $element): bool
     {
         return $this->visibleElements[$element] ?? true;
