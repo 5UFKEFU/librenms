@@ -47,6 +47,15 @@ temperature pair is removed only when all of the following are true:
 - no warning thresholds exist; and
 - the stored high/low pair has the old algorithm's distinctive 30-degree gap.
 
+## Alert transport and operation API
+
+`GET`/`POST`/`DELETE /api/v0/alert/transports` manage alert transports with the
+same validation as the web form, and `GET /api/v0/alert/operations` plus
+`POST`/`DELETE /api/v0/alert/operations/{id}/transports` add or remove one
+transport on every segment of an operation. The FebNMS app uses them to
+register its push webhook on a server without any manual configuration.
+Documented in [`doc/API/Alerts.md`](doc/API/Alerts.md).
+
 ## Reproducible container image
 
 [`deploy/custom-image/Dockerfile`](deploy/custom-image/Dockerfile) layers the

@@ -94,6 +94,16 @@ Route::prefix('v0')->group(function (): void {
         Route::delete('rules/{id}', [App\Api\Controllers\LegacyApiController::class, 'delete_rule'])->name('delete_rule')->middleware('can:delete,App\Models\AlertRule');
     });
 
+    // Alert transports and operations
+    Route::prefix('alert')->group(function (): void {
+        Route::get('transports', [App\Api\Controllers\AlertTransportController::class, 'index'])->name('list_alert_transports');
+        Route::post('transports', [App\Api\Controllers\AlertTransportController::class, 'store'])->name('add_alert_transport');
+        Route::delete('transports/{transport}', [App\Api\Controllers\AlertTransportController::class, 'destroy'])->name('delete_alert_transport');
+        Route::get('operations', [App\Api\Controllers\AlertOperationController::class, 'index'])->name('list_alert_operations');
+        Route::post('operations/{operation}/transports', [App\Api\Controllers\AlertOperationController::class, 'attachTransport'])->name('attach_alert_operation_transport');
+        Route::delete('operations/{operation}/transports/{transport}', [App\Api\Controllers\AlertOperationController::class, 'detachTransport'])->name('detach_alert_operation_transport');
+    });
+
     // Routing VRF
     Route::middleware(['can:viewAny,App\Models\Vrf'])->group(function (): void {
         Route::get('routing/vrf/{id}', [App\Api\Controllers\LegacyApiController::class, 'get_vrf'])->name('get_vrf');

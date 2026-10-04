@@ -530,3 +530,124 @@ Output:
   "id": 2
 }
 ```
+
+### `list_alert_transports`
+
+List the alert transports. Fields whose name contains `password`, `secret` or `token` are masked.
+
+Route: `/api/v0/alert/transports`
+
+Example:
+
+```curl
+curl -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/alert/transports
+```
+
+Output:
+
+```json
+{
+    "status": "ok",
+    "count": 1,
+    "transports": [
+        {
+            "transport_id": 3,
+            "transport_name": "Ops webhook",
+            "transport_type": "api",
+            "is_default": false,
+            "transport_config": {
+                "api-method": "POST",
+                "api-url": "https://hooks.example/alerts",
+                "api-as-form": true,
+                "api-body": "alertID={{ $alert_id }}\nruleID={{ $rule_id }}",
+                "api-auth-password": null
+            }
+        }
+    ]
+}
+```
+
+### `add_alert_transport`
+
+Create an alert transport. The configuration is validated by the transport type, exactly as the web form does.
+
+Route: `/api/v0/alert/transports`
+
+Input (JSON):
+
+- name: the transport name. Mandatory.
+- type: the transport type, for example `api`, `mail` or `slack`. Mandatory.
+- is_default: optional boolean.
+- config: object with the transport's configuration fields (the field names of the web form, for example `api-url`). Mandatory.
+
+Example:
+
+```curl
+curl -X POST -d '{"name":"Ops webhook","type":"api","config":{"api-method":"POST","api-url":"https://hooks.example/alerts","api-as-form":true,"api-body":"alertID={{ $alert_id }}\nruleID={{ $rule_id }}"}}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/alert/transports
+```
+
+Output: the created transport in the same format as `list_alert_transports`, with HTTP status 201.
+
+### `delete_alert_transport`
+
+Delete an alert transport and remove it from every operation segment.
+
+Route: `/api/v0/alert/transports/:id`
+
+```curl
+curl -X DELETE -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/alert/transports/3
+```
+
+### `list_alert_operations`
+
+List the global alert operations with their segments and transports.
+
+Route: `/api/v0/alert/operations`
+
+Output:
+
+```json
+{
+    "status": "ok",
+    "count": 1,
+    "operations": [
+        {
+            "id": 12,
+            "name": "Default operation",
+            "default_operation_step_duration_seconds": 300,
+            "notifications_suppressed": false,
+            "segments": [
+                {"id": 20, "position": 0, "operation_phase": "problem", "escalation_step_from": 1, "escalation_step_to": null, "start_in_seconds": 60, "step_duration_seconds": 0, "transports": [{"id": "3", "text": "Api: Ops webhook"}]}
+            ]
+        }
+    ]
+}
+```
+
+### `attach_alert_operation_transport`
+
+Add a transport to every segment of an operation that does not have it yet, so the rules using that operation also deliver to it.
+
+Route: `/api/v0/alert/operations/:id/transports`
+
+Input (JSON):
+
+- transport_id: the transport to add. Mandatory.
+- phases: optional list of segment phases to touch (`problem`, `recovery`, `update`); every phase by default.
+
+```curl
+curl -X POST -d '{"transport_id":3}' -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/alert/operations/12/transports
+```
+
+Output: the operation in the same format as `list_alert_operations`, plus `changed_segments`.
+
+### `detach_alert_operation_transport`
+
+Remove a transport from every segment of an operation.
+
+Route: `/api/v0/alert/operations/:id/transports/:transport_id`
+
+```curl
+curl -X DELETE -H 'Authorization: Bearer YOURAPITOKENHERE' https://foo.example/api/v0/alert/operations/12/transports/3
+```
+
