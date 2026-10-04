@@ -73,6 +73,8 @@ than including the downstream container packaging in an unrelated change:
   removes unsafe guessed low-temperature limits and migrates legacy guesses.
 - [librenms/librenms#20355](https://github.com/librenms/librenms/pull/20355)
   adds the permission-checked single and bulk sensor threshold API.
+- [librenms/librenms#20356](https://github.com/librenms/librenms/pull/20356)
+  adds the port speed override API; rebased on #20754.
 
 ## Personal traffic graph layout
 
