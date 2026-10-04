@@ -2668,9 +2668,12 @@ function rename_device(Illuminate\Http\Request $request)
         try {
             $device->hostname = $new_hostname;
             $device->save();
-        } catch (\Throwable) {
-            return api_error(500, 'Device failed to be renamed');
+        } catch (\Throwable $e) {
+            return api_error(500, 'Device failed to be renamed: ' . $e->getMessage());
         }
+
+        // Clients check the status; an empty body read as a failed rename.
+        return api_success_noresult(200, "Device has been renamed to $new_hostname");
     }
 }
 
