@@ -47,6 +47,8 @@ class GraphParameters implements \Stringable
     public readonly string $font;
     public readonly string $font_color;
     public readonly int $font_size;
+    /** The client chose the text size, so it also sized the canvas for that text. */
+    public readonly bool $clientFontSize;
     public readonly string $background;
     public readonly string $canvas;
 
@@ -118,6 +120,7 @@ class GraphParameters implements \Stringable
         // Clients drawing large graphs may ask for larger text; the axis uses one size less.
         $requestedFontSize = filter_var($vars['font_size'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 6, 'max_range' => 16]]);
         $this->font_size = $requestedFontSize ?: ($this->width <= self::MEDIUM_SMALL ? 7 : 8);
+        $this->clientFontSize = (bool) $requestedFontSize;
 
         $this->canvas = Clean::alphaDash($vars['bg'] ?? '');
         $this->background = Clean::alphaDash($vars['bbg'] ?? '');
@@ -183,9 +186,16 @@ class GraphParameters implements \Stringable
 
         if ($this->imageFormat === ImageFormat::Svg) {
             $options[] = '--imgformat=SVG';
-            if ($this->width < self::MEDIUM) {
+            // Shrink small thumbnails, but not a graph whose client set the
+            // text size: zooming would shrink that text and the whole layout.
+            if ($this->width < self::MEDIUM && ! $this->clientFontSize) {
                 array_push($options, '-m', 0.75, '-R', 'light');
             }
+        }
+
+        // Such a client fits the image to its view; the vertical tag only takes width.
+        if ($this->clientFontSize) {
+            $options[] = '--disable-rrdtool-tag';
         }
 
         // set up fonts
