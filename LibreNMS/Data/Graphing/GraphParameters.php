@@ -196,6 +196,9 @@ class GraphParameters implements \Stringable
         // Such a client fits the image to its view; the vertical tag only takes width.
         if ($this->clientFontSize) {
             $options[] = '--disable-rrdtool-tag';
+            if ($grid = $this->compactTimeGrid()) {
+                array_push($options, '--x-grid', $grid);
+            }
         }
 
         // set up fonts
@@ -287,6 +290,29 @@ class GraphParameters implements \Stringable
     public function getTitle(): string
     {
         return $this->user_title ?? $this->title ?: $this->defaultTitle();
+    }
+
+    /**
+     * rrdtool's default time labels ("Sat 16:00", "Tue 29 Sep") overlap on a
+     * narrow graph drawn at a client-chosen text size; use short labels there.
+     */
+    private function compactTimeGrid(): ?string
+    {
+        if ($this->width >= 450) {
+            return null;
+        }
+        $day = 86400;
+        if ($this->period <= $day / 4) {
+            return 'MINUTE:30:HOUR:1:HOUR:' . ($this->width < 300 ? 2 : 1) . ':0:%H:%M';
+        }
+        if ($this->period <= 2 * $day) {
+            return 'HOUR:1:HOUR:6:HOUR:' . ($this->period <= $day && $this->width >= 300 ? 4 : 6) . ':0:%H:%M';
+        }
+        if ($this->period <= 10 * $day) {
+            return 'HOUR:12:DAY:1:DAY:' . ($this->width < 400 ? 2 : 1) . ':0:%m/%d';
+        }
+
+        return null;
     }
 
     private function graphColors(): array
