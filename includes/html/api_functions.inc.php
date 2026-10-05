@@ -2006,7 +2006,82 @@ function add_edit_rule(Illuminate\Http\Request $request)
         }
     }
 
+    if (isset($data['operation_timing']) && is_array($data['operation_timing'])) {
+        try {
+            api_set_rule_operation_timing((int) $rule_id, $data['operation_timing']);
+        } catch (\InvalidArgumentException $e) {
+            return api_error(400, $e->getMessage());
+        }
+    }
+
     return api_success_noresult(200);
+}
+
+/**
+ * Sets how often a rule's problem notifications repeat: `max_notifications`
+ * caps how many times each problem segment fires (null = while the alert is
+ * active, 1 = once) and `step_duration_seconds` is the gap between them
+ * (0 = the operation's default). An operation shared with other rules is
+ * copied for this rule first, so their timing is left unchanged.
+ *
+ * @param  array<string, mixed>  $timing
+ */
+function api_set_rule_operation_timing(int $ruleId, array $timing): void
+{
+    $rule = \App\Models\AlertRule::find($ruleId);
+    if (! $rule || ! $rule->alert_operation_id) {
+        throw new \InvalidArgumentException('The rule has no alert operation to time.');
+    }
+    if (! array_key_exists('max_notifications', $timing) || ! array_key_exists('step_duration_seconds', $timing)) {
+        throw new \InvalidArgumentException('operation_timing needs max_notifications and step_duration_seconds.');
+    }
+    $max = $timing['max_notifications'];
+    if ($max !== null && (! is_numeric($max) || (int) $max < 1)) {
+        throw new \InvalidArgumentException('max_notifications must be null or at least 1.');
+    }
+    if (! is_numeric($timing['step_duration_seconds']) || (int) $timing['step_duration_seconds'] < 0) {
+        throw new \InvalidArgumentException('step_duration_seconds must be 0 or more.');
+    }
+    $step = (int) $timing['step_duration_seconds'];
+
+    \Illuminate\Support\Facades\DB::transaction(function () use ($rule, $max, $step): void {
+        $operation = \App\Models\AlertOperation::with('segments')->findOrFail($rule->alert_operation_id);
+        $shared = \App\Models\AlertRule::query()->where('alert_operation_id', $operation->id)->whereKeyNot($rule->id)->exists();
+        if ($shared) {
+            $operation = api_copy_alert_operation($operation, mb_substr($rule->name, 0, 200) . ' — API');
+            $rule->alert_operation_id = $operation->id;
+            $rule->save();
+        }
+
+        foreach ($operation->segments()->where('operation_phase', 'problem')->get() as $segment) {
+            $segment->escalation_step_to = $max === null ? null : $segment->escalation_step_from + (int) $max - 1;
+            $segment->step_duration_seconds = $step;
+            $segment->save();
+        }
+    });
+}
+
+function api_copy_alert_operation(\App\Models\AlertOperation $operation, string $name): \App\Models\AlertOperation
+{
+    $copy = \App\Models\AlertOperation::create([
+        'name' => $name,
+        'default_operation_step_duration_seconds' => $operation->default_operation_step_duration_seconds,
+        'notifications_suppressed' => $operation->notifications_suppressed,
+    ]);
+    foreach ($operation->segments as $segment) {
+        $newSegment = $copy->segments()->create($segment->only([
+            'position', 'operation_phase', 'escalation_step_from', 'escalation_step_to', 'start_in_seconds', 'step_duration_seconds',
+        ]));
+        foreach (\App\Models\AlertOperationTransportMap::query()->where('segment_id', $segment->id)->get() as $map) {
+            \App\Models\AlertOperationTransportMap::create([
+                'segment_id' => $newSegment->id,
+                'transport_or_group_id' => $map->transport_or_group_id,
+                'target_type' => $map->target_type,
+            ]);
+        }
+    }
+
+    return $copy;
 }
 
 function delete_rule(Illuminate\Http\Request $request)
