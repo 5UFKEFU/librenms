@@ -293,9 +293,12 @@ function get_graph_generic_by_hostname(Request $request)
         if (Str::contains($vars['type'], '_wireless')) {
             $vars['type'] = str_replace('device_', '', $vars['type']);
         } else {
-            // If this isn't a wireless graph we need to fix the name.
-            $vars['type'] = str_replace('device_', 'sensor_', $vars['type']);
+            // Processors, memory pools, storage and disks have their own item
+            // graphs; drawing them as sensor_* graphs read the wrong rows.
+            $vars['type'] = \LibreNMS\Data\Graphing\HealthItemGraph::type($vars['type']);
         }
+    } elseif ($request->routeIs('get_health_graph')) {
+        $vars['type'] = \LibreNMS\Data\Graphing\HealthItemGraph::aggregateType($vars['type']);
     }
 
     // use hostname as device_id if it's all digits
@@ -1031,6 +1034,8 @@ function list_available_health_graphs(Illuminate\Http\Request $request)
                 'processors' => ['desc' => 'Processors', 'name' => 'device_processor'],
                 'storage' => ['desc' => 'Storage', 'name' => 'device_storage'],
                 'mempools' => ['desc' => 'Memory Pools', 'name' => 'device_mempool'],
+                // Lists each disk for per-disk I/O graphs, as the web health page shows.
+                'diskIo' => ['desc' => 'Disk I/O', 'name' => 'device_diskio'],
             ];
             foreach ($extraTypes as $relation => $entry) {
                 if ($device->{$relation}()->count() > 0) {
@@ -1045,6 +1050,7 @@ function list_available_health_graphs(Illuminate\Http\Request $request)
             'processor' => [$device->processors(), 'processor_id', 'processor_descr'],
             'storage' => [$device->storage(), 'storage_id', 'storage_descr'],
             'mempool' => [$device->mempools(), 'mempool_id', 'mempool_descr'],
+            'diskio', 'diskio_bits', 'diskio_ops' => [$device->diskIo(), 'diskio_id', 'diskio_descr'],
             default => [$device->sensors()->where('sensor_class', $type)->where('sensor_deleted', 0), 'sensor_id', 'sensor_descr'],
         };
 
