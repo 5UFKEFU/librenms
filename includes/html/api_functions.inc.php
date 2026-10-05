@@ -123,7 +123,9 @@ function api_get_graph(Request $request, array $additional = [])
 {
     $request->validate([
         'traffic_direction' => 'sometimes|in:in,out,both',
-        'disk_scope' => 'sometimes|in:all,physical',
+        'disk_scope' => 'sometimes|in:all,physical,partitions',
+        'disk_direction' => 'sometimes|in:both,read,write',
+        'disk' => ['sometimes', 'string', 'max:64', 'regex:/^[A-Za-z0-9._-]+$/'],
         'graph_series' => ['sometimes', 'string', 'max:128', 'regex:/^[a-zA-Z0-9_]+$/'],
         'traffic_same_axis' => 'sometimes|boolean',
         'traffic_style' => 'sometimes|in:default,cacti',
@@ -151,6 +153,8 @@ function api_get_graph(Request $request, array $additional = [])
             'previous',
             'duration',
             'disk_scope',
+            'disk_direction',
+            'disk',
             'graph_series',
             'traffic_direction',
             'traffic_same_axis',

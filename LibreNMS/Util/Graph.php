@@ -221,6 +221,11 @@ class Graph
                 $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::direction($rrd_options, $graph_params->trafficDirection);
             }
 
+            // Disk graphs draw reads as the "in" series and writes as "out".
+            if ($graph_params->diskDirection !== 'both') {
+                $rrd_options = \LibreNMS\Data\Graphing\TrafficGraphStyle::direction($rrd_options, $graph_params->diskDirection === 'read' ? 'in' : 'out');
+            }
+
             $options = [...$graph_params->toRrdOptions(), ...$rrd_options];
             if (isset($vars['graph_series'])) {
                 if (! GraphSeriesSelection::supports($vars['type'] ?? '')) {

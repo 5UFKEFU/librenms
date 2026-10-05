@@ -68,6 +68,12 @@ class GraphParameters implements \Stringable
     public readonly string $trafficStyle;
     public readonly bool $supportsTrafficDirection;
     public readonly bool $physicalDisksOnly;
+    /** Disk graphs: all, physical (whole disks) or partitions. */
+    public readonly string $diskScope;
+    /** Disk graphs: one disk and its partitions, or null for every disk. */
+    public readonly ?string $diskName;
+    /** Disk graphs: both, read or write. */
+    public readonly string $diskDirection;
 
     public readonly bool $inverse;
     public readonly string $in;
@@ -99,8 +105,12 @@ class GraphParameters implements \Stringable
         $this->imageFormat = ImageFormat::forGraph($vars['graph_type'] ?? null);
         [$this->type, $this->subtype] = $this->extractType($vars['type'] ?? '');
 
-        $this->physicalDisksOnly = in_array($vars['type'] ?? '', ['device_diskio_bits', 'device_diskio_ops'], true)
-            && ($vars['disk_scope'] ?? '') === 'physical';
+        $isDiskGraph = in_array($vars['type'] ?? '', ['device_diskio_bits', 'device_diskio_ops'], true);
+        $this->diskScope = $isDiskGraph && in_array($vars['disk_scope'] ?? '', ['physical', 'partitions'], true) ? $vars['disk_scope'] : 'all';
+        $this->physicalDisksOnly = $this->diskScope === 'physical';
+        $this->diskName = $isDiskGraph && is_string($vars['disk'] ?? null) && preg_match('/^[A-Za-z0-9._-]{1,64}$/D', $vars['disk'])
+            ? $vars['disk'] : null;
+        $this->diskDirection = $isDiskGraph && in_array($vars['disk_direction'] ?? '', ['read', 'write'], true) ? $vars['disk_direction'] : 'both';
 
         $this->supportsTrafficDirection = in_array($vars['type'] ?? '', ['device_bits', 'port_bits'], true);
         $this->trafficDirection = $this->supportsTrafficDirection && in_array($vars['traffic_direction'] ?? '', ['in', 'out'], true)
