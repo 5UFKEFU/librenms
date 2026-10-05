@@ -1058,9 +1058,20 @@ function list_available_health_graphs(Illuminate\Http\Request $request)
             default => [$device->sensors()->where('sensor_class', $type)->where('sensor_deleted', 0), 'sensor_id', 'sensor_descr'],
         };
 
+        // Lists carry each item's current usage so a client needs one request
+        // for a device's CPU, memory or storage, not one per processor.
+        $usage_field = match ($type) {
+            'processor' => 'processor_usage',
+            'mempool' => 'mempool_perc',
+            'storage' => 'storage_perc',
+            default => null,
+        };
         $graphs = $sensor_id
             ? $query->where($id_field, $sensor_id)->get()->toArray()
-            : $query->get()->map(fn ($graph) => ['sensor_id' => $graph->{$id_field}, 'desc' => $graph->{$descr_field}])->all();
+            : $query->get()->map(fn ($graph) => array_merge(
+                ['sensor_id' => $graph->{$id_field}, 'desc' => $graph->{$descr_field}],
+                $usage_field ? [$usage_field => $graph->{$usage_field}] : []
+            ))->all();
 
         return api_success($graphs, 'graphs');
     });
