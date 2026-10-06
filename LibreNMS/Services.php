@@ -51,6 +51,11 @@ class Services
             }
         }
 
+        // Built-in check that needs no plugin: reads an SNMP extend on the device.
+        if (is_file(self::customCheckPath('snmp_extend'))) {
+            $services[] = 'snmp_extend';
+        }
+
         return $services;
     }
 
