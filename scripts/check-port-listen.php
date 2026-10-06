@@ -33,7 +33,13 @@ if (! $device->exists) {
 $takeAddress = function (array $parts): array {
     $length = (int) ($parts[1] ?? 0);
     $bytes = array_slice($parts, 2, $length);
-    $address = $length === 4 ? implode('.', $bytes) : ($length === 0 ? '*' : 'ipv6');
+    if ($length === 0 || array_sum(array_map('intval', $bytes)) === 0) {
+        $address = 'all addresses';
+    } elseif ($length === 4) {
+        $address = implode('.', $bytes);
+    } else {
+        $address = 'an IPv6 address';
+    }
 
     return [$address, array_slice($parts, 2 + $length)];
 };
@@ -87,6 +93,6 @@ if (empty($listening)) {
     echo "CRITICAL - nothing is listening on $label\n";
     exit(2);
 }
-$addresses = implode(', ', array_unique(array_map(fn ($a) => $a === '0.0.0.0' ? 'all addresses' : $a, $listening)));
+$addresses = implode(', ', array_unique($listening));
 echo "OK - listening on $label ($addresses)\n";
 exit(0);
