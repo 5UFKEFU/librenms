@@ -91,6 +91,24 @@ function poll_service($service)
     // the check_service function runs $check_cmd through escapeshellcmd, so
     [$new_status, $msg, $perf] = check_service($check_cmd, $check_parser ?? null);
     $update['service_checked'] = time();
+
+    // A service can ask for several failed checks in a row before it is
+    // marked failed (and alerts fire). Until then it stays OK, and the
+    // message carries a "[soft n/N]" marker so the failure is still visible.
+    $retries = max(1, (int) ($service['service_retries'] ?? 1));
+    $fail_count = (int) ($service['service_fail_count'] ?? 0);
+    if ($new_status == 0) {
+        if ($fail_count > 0) {
+            $update['service_fail_count'] = 0;
+        }
+    } else {
+        $fail_count = min($fail_count + 1, 255);
+        $update['service_fail_count'] = $fail_count;
+        if ($old_status == 0 && $fail_count < $retries) {
+            $msg = "[soft $fail_count/$retries] " . $msg;
+            $new_status = 0;
+        }
+    }
     d_echo("Response: $msg\n");
 
     // If we have performance data we will store it.

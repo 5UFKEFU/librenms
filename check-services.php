@@ -64,6 +64,15 @@ $services = $query->get();
 foreach ($services as $service) {
     // Run the polling function if service is enabled and the associated device is up, "Disable ICMP Test" option is not enabled,
     // or service hostname/ip is different from associated device
+    // Each service is checked at its own interval (default: every 5 minutes),
+    // so the dispatcher can run more often than the slowest service.
+    $interval = (int) ($service['service_interval'] ?? 0) ?: 300;
+    // ("Check now" in the API polls one service directly and is not limited.)
+    $last = (int) ($service['service_checked'] ?? 0);
+    if ($last > 0 && time() - $last < $interval - 20) {
+        continue;
+    }
+
     if (! $service['service_disabled'] && ($service['status'] == 1 || $service['status'] == 0 ||
         (! is_null($service['service_ip']) && $service['service_ip'] !== $service['hostname'] &&
         $service['service_ip'] !== inet6_ntop($service['ip'])))) {
