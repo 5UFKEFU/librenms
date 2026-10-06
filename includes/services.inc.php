@@ -49,10 +49,14 @@ function delete_service($service = null)
     return Service::query()->where('service_id', $service)->delete();
 }
 
-function poll_service($service)
+/**
+ * Build the plugin command for a service row (service_type, service_ip,
+ * service_param, hostname, overwrite_ip), the same way the poller does.
+ *
+ * @return array{0: string, 1: callable|null} the command and an optional output parser
+ */
+function service_check_command($service): array
 {
-    $update = [];
-    $old_status = $service['service_status'];
     $service['service_type'] = Clean::fileName($service['service_type']);
     $service['service_ip'] = IP::isValid($service['service_ip']) ? $service['service_ip'] : Clean::fileName($service['service_ip']);
     $service['hostname'] = IP::isValid($service['hostname']) ? $service['hostname'] : Clean::fileName($service['hostname']);
@@ -71,6 +75,15 @@ function poll_service($service)
         $check_cmd = LibrenmsConfig::get('nagios_plugins') . '/check_' . $service['service_type'] . ' -H ' . ($service['service_ip'] ?: $service['hostname']);
         $check_cmd .= ' ' . $service['service_param'];
     }
+
+    return [$check_cmd, $check_parser];
+}
+
+function poll_service($service)
+{
+    $update = [];
+    $old_status = $service['service_status'];
+    [$check_cmd, $check_parser] = service_check_command($service);
 
     $service_id = $service['service_id'];
     // Some debugging

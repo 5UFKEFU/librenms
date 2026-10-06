@@ -121,6 +121,8 @@ Route::prefix('v0')->group(function (): void {
         Route::post('services/{hostname}', [App\Api\Controllers\LegacyApiController::class, 'add_service_for_host'])->name('add_service_for_host')->middleware('can:create,App\Models\Service');
         Route::delete('services/{id}', [App\Api\Controllers\LegacyApiController::class, 'del_service_from_host'])->name('del_service_from_host')->middleware('can:delete,App\Models\Service');
         Route::patch('services/{id}', [App\Api\Controllers\LegacyApiController::class, 'edit_service_for_host'])->name('edit_service_for_host')->middleware('can:update,App\Models\Service');
+        Route::post('services/{id}/check', [App\Api\Controllers\ServiceCheckController::class, 'run'])->name('run_service_check')->middleware('can:update,App\Models\Service');
+        Route::post('service-checks', [App\Api\Controllers\ServiceCheckController::class, 'test'])->name('test_service_check')->middleware('can:create,App\Models\Service');
     });
 
     // Syslog Sink (receives syslogs, requires write access on devices / system)
