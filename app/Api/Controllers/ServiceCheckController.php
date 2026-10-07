@@ -43,6 +43,8 @@ class ServiceCheckController extends Controller
                 'service_message' => $service->service_message,
                 'service_checked' => $service->service_checked,
                 'service_changed' => $service->service_changed,
+                'service_slow' => (bool) ($service->service_slow ?? false),
+                'service_response_time' => $service->service_response_time ?? null,
             ],
             'duration' => round(microtime(true) - $started, 3),
         ]);

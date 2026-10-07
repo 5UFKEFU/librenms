@@ -149,6 +149,35 @@ function poll_service($service)
         app('Datastore')->put($service, 'services', $tags, $fields);
     }
 
+    // Response time, tracked apart from up/down: a check slower than
+    // service_slow_after (seconds) counts as slow; after service_retries slow
+    // checks in a row service_slow is set, which alert rules can match on
+    // without the service being reported as failed.
+    $response_time = service_response_seconds($perf);
+    if ($response_time !== null) {
+        $update['service_response_time'] = $response_time;
+    }
+    $slow_after = (float) ($service['service_slow_after'] ?? 0);
+    $was_slow = (bool) ($service['service_slow'] ?? false);
+    $is_slow = false;
+    if ($slow_after > 0 && $response_time !== null && $new_status == 0) {
+        $slow_count = $response_time > $slow_after ? min((int) ($service['service_slow_count'] ?? 0) + 1, 255) : 0;
+        $update['service_slow_count'] = $slow_count;
+        $is_slow = $slow_count >= $retries;
+    } elseif ((int) ($service['service_slow_count'] ?? 0) > 0) {
+        $update['service_slow_count'] = 0;
+    }
+    if ($is_slow !== $was_slow) {
+        $update['service_slow'] = $is_slow;
+        Eventlog::log(
+            "Service {$service['service_name']} ({$service['service_type']}) " . ($is_slow ? "is slow: {$response_time}s > {$slow_after}s" : 'is responding normally again'),
+            $service['device_id'],
+            'service',
+            $is_slow ? Severity::Warning : Severity::Ok,
+            $service['service_id']
+        );
+    }
+
     if ($old_status != $new_status) {
         // Status has changed, update.
         $update['service_changed'] = time();
@@ -182,7 +211,32 @@ function poll_service($service)
         edit_service($update, $service['service_id']);
     }
 
+    // A slow/normal change only (the status change above already ran them).
+    if ($is_slow !== $was_slow && $old_status == $new_status) {
+        $rules = new AlertRules($service['device_id']);
+        $rules->run();
+    }
+
     return true;
+}
+
+/**
+ * The check's response time in seconds from its perfdata ("time", or a
+ * ping's "rta"), or null when the plugin reported none.
+ */
+function service_response_seconds(array $perf): ?float
+{
+    $metric = $perf['time'] ?? $perf['rta'] ?? null;
+    if (! is_array($metric) || ! is_numeric($metric['value'] ?? null)) {
+        return null;
+    }
+    $value = (float) $metric['value'];
+
+    return match (strtolower((string) ($metric['uom'] ?? 's'))) {
+        'ms' => $value / 1000,
+        'us' => $value / 1000000,
+        default => $value,
+    };
 }
 
 function check_service($command, ?callable $parser = null)
