@@ -313,6 +313,64 @@ function get_graph_generic_by_hostname(Request $request)
     return check_device_permission($device_id, fn () => api_get_graph($request, $vars));
 }
 
+/**
+ * The device's applications (e.g. nvidia) with the graphs each one has, so a
+ * client can show them without knowing LibreNMS's graph file names.
+ */
+function list_device_applications(Request $request)
+{
+    $hostname = $request->route('hostname');
+    $device_id = ctype_digit($hostname) ? $hostname : getidbyname($hostname);
+
+    return check_device_permission($device_id, function () use ($device_id) {
+        $apps = \App\Models\Application::query()->where('device_id', $device_id)->get()->map(fn ($app) => [
+            'app_id' => $app->app_id,
+            'app_type' => $app->app_type,
+            'app_instance' => $app->app_instance,
+            'app_state' => $app->app_state,
+            'app_status' => $app->app_status,
+            'app_last_polled' => $app->timestamp,
+            'graphs' => application_graph_names($app->app_type),
+        ]);
+
+        return api_success($apps->values()->all(), 'applications');
+    });
+}
+
+/** Graph names (without the "application_<type>_" prefix) available for an app type. */
+function application_graph_names(string $appType): array
+{
+    if (! preg_match('/^[a-z0-9_-]+$/i', $appType)) {
+        return [];
+    }
+    $names = [];
+    foreach (glob(base_path("includes/html/graphs/application/{$appType}_*.inc.php")) ?: [] as $file) {
+        $name = substr(basename($file, '.inc.php'), strlen($appType) + 1);
+        if ($name !== '' && $name !== 'common') {
+            $names[] = $name;
+        }
+    }
+    sort($names);
+
+    return $names;
+}
+
+function get_graph_by_application(Request $request)
+{
+    $hostname = $request->route('hostname');
+    $device_id = ctype_digit($hostname) ? $hostname : getidbyname($hostname);
+    $app = \App\Models\Application::query()->where('device_id', $device_id)->find((int) $request->route('app_id'));
+    $graph = (string) $request->route('graph');
+    if ($app === null || ! in_array($graph, application_graph_names($app->app_type), true)) {
+        return api_error(404, 'Application graph not found');
+    }
+
+    return check_device_permission($device_id, fn () => api_get_graph($request, [
+        'type' => "application_{$app->app_type}_{$graph}",
+        'id' => $app->app_id,
+    ]));
+}
+
 function get_graph_by_service(Request $request)
 {
     $vars = [];

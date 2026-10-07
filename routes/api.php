@@ -165,6 +165,8 @@ Route::prefix('v0')->group(function (): void {
             Route::get('{hostname}/ports/{ifname}', [App\Api\Controllers\LegacyApiController::class, 'get_port_stats_by_port_hostname'])->name('get_port_stats_by_port_hostname')->where('ifname', '.*');
             Route::get('{hostname}/ports/{ifname}/{type}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_by_port_hostname'])->name('get_graph_by_port_hostname');
             Route::get('{hostname}/services/{id}/graphs/{datasource}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_by_service'])->name('get_graph_by_service');
+            Route::get('{hostname}/applications', [App\Api\Controllers\LegacyApiController::class, 'list_device_applications'])->name('list_device_applications');
+            Route::get('{hostname}/applications/{app_id}/graphs/{graph}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_by_application'])->name('get_graph_by_application');
             Route::post('{hostname}/eventlog', [App\Api\Controllers\LegacyApiController::class, 'add_eventlog'])->name('add_eventlog');
             Route::get('{hostname}/{type}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_generic_by_hostname'])->name('get_graph_generic_by_hostname');
             Route::get('', [App\Api\Controllers\LegacyApiController::class, 'list_devices'])->name('list_devices');
