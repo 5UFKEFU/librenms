@@ -99,7 +99,13 @@ foreach ($rrd_list as $rrd) {
 
     $stack = $i && ($dostack === 1) ? ':STACK' : '';
 
-    $rrd_options[] = 'LINE2:' . $g_defname . $i . '#' . $colour . ':' . $descr . "$stack";
+    // Optional filled area under the line (used by the NVIDIA graphs).
+    if (! empty($rrd['area'])) {
+        $rrd_options[] = 'AREA:' . $g_defname . $i . '#' . ($rrd['areacolour'] ?? $colour . '40') . "$stack";
+        $rrd_options[] = 'LINE1.5:' . $g_defname . $i . '#' . $colour . ':' . $descr;
+    } else {
+        $rrd_options[] = 'LINE2:' . $g_defname . $i . '#' . $colour . ':' . $descr . "$stack";
+    }
     $rrd_options[] = 'GPRINT:' . $t_defname . $i . ':LAST:%8.0lf%s';
     $rrd_options[] = 'GPRINT:' . $t_defname . $i . 'min:MIN:%8.0lf%s';
     $rrd_options[] = 'GPRINT:' . $t_defname . $i . 'max:MAX:%8.0lf%s';
