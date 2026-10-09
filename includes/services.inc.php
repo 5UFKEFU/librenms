@@ -316,7 +316,6 @@ function service_diagnostics(string $type, string $command): array
     }
 
     $lines = ['Command: ' . implode(' ', $shown)];
-    $lines[] = 'Checked from: ' . gethostname();
     if (in_array($type, ['snmp_extend', 'port_listen'], true)) {
         $lines[] = 'Runs on the server itself, read over SNMP.';
     }
