@@ -19,3 +19,9 @@ The web and dispatcher overlays were rebuilt on both hosts, first at `c40b927099
 ## Rollback
 
 Switch both compose files back to the `*-ff8cb4b23e` tags and recreate the containers.
+
+## Update: Host-header checks (`818abfb316`)
+
+- When `-I` is set, the diagnostics state "Connects to <address>; Host header: <name> (not resolved)" instead of a DNS lookup of the name.
+- For plain HTTP the curl line requests `http://<address>/` with `-H 'Host: <name>'`. HTTPS keeps `--connect-to`, because only the URL sets SNI.
+- Deployed to both hosts as `svc-retries-818abfb316` and `dispatcher-svc-retries-818abfb316`. Logins returned 200.
