@@ -334,7 +334,10 @@ function service_diagnostics(string $type, string $command): array
         $lines[] = "DNS: $host → " . ($records ? implode(', ', $records) : 'no address');
         $address = $records[0] ?? null;
     }
-    if ($vhost !== $host && ! filter_var($vhost, FILTER_VALIDATE_IP)) {
+    if ($vhost !== $host && $first('-I') !== null) {
+        // check_http -I: the name is only sent as the Host header (and SNI).
+        $lines[] = "Connects to $host; Host header: $vhost (not resolved)";
+    } elseif ($vhost !== $host && ! filter_var($vhost, FILTER_VALIDATE_IP)) {
         $records = @gethostbynamel($vhost) ?: [];
         $lines[] = "DNS: $vhost → " . ($records ? implode(', ', $records) : 'no address');
     }
@@ -344,14 +347,24 @@ function service_diagnostics(string $type, string $command): array
         $port = (int) ($first('-p') ?? $first('--port') ?? ($ssl ? 443 : 80));
         $uri = $first('-u') ?? $first('--url') ?? '/';
         $scheme = $ssl ? 'https' : 'http';
-        $url = "$scheme://$vhost:$port" . (str_starts_with($uri, '/') ? $uri : "/$uri");
+        $path = str_starts_with($uri, '/') ? $uri : "/$uri";
         $curl = ['curl', '-sv', '-o', '/dev/null', '-k', '--max-time', '10', '--max-redirs', '0'];
-        if ($first('-I') !== null && $vhost !== $first('-I')) {
+        $address = $first('-I');
+        if ($address !== null && $vhost !== $address) {
             // Like check_http -I: connect to that address, ask for the name.
-            $curl[] = '--connect-to';
-            $curl[] = "$vhost:$port:" . $first('-I') . ":$port";
+            if ($ssl) {
+                // HTTPS also needs the name for SNI, which only the URL sets.
+                $curl[] = '--connect-to';
+                $curl[] = "$vhost:$port:$address:$port";
+                $curl[] = "https://$vhost:$port$path";
+            } else {
+                $curl[] = '-H';
+                $curl[] = "Host: $vhost";
+                $curl[] = "http://" . (str_contains($address, ':') ? "[$address]" : $address) . ":$port$path";
+            }
+        } else {
+            $curl[] = "$scheme://$vhost:$port$path";
         }
-        $curl[] = $url;
         $lines[] = '$ ' . implode(' ', array_map('escapeshellarg', $curl));
         $process = proc_open($curl, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (is_resource($process)) {
