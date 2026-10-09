@@ -34,6 +34,7 @@ class ServiceCheckController extends Controller
         $started = microtime(true);
         poll_service($row);
         $service = Service::query()->find($id);
+        [$command] = service_check_command($row->toArray());
 
         return response()->json([
             'status' => 'ok',
@@ -46,6 +47,7 @@ class ServiceCheckController extends Controller
                 'service_slow' => (bool) ($service->service_slow ?? false),
                 'service_response_time' => $service->service_response_time ?? null,
             ],
+            'diagnostics' => service_diagnostics((string) $row->service_type, $command),
             'duration' => round(microtime(true) - $started, 3),
         ]);
     }
@@ -85,6 +87,7 @@ class ServiceCheckController extends Controller
                 'service_message' => trim((string) $message),
                 'metrics' => array_map(fn ($metric) => ['value' => $metric['value'] ?? null, 'uom' => $metric['uom'] ?? ''], $metrics),
             ],
+            'diagnostics' => service_diagnostics($validated['type'], $command),
             'duration' => round(microtime(true) - $started, 3),
         ]);
     }

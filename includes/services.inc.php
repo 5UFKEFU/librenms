@@ -280,3 +280,115 @@ function list_available_services()
 {
     return \LibreNMS\Services::list();
 }
+
+/**
+ * What a check actually reaches, for a client to confirm it tested the right
+ * machine: the command (secrets masked), DNS answers, and for HTTP the
+ * connection and response headers as `curl -v` shows them; for TCP services
+ * the address that answered.
+ *
+ * @return string[] lines of text
+ */
+function service_diagnostics(string $type, string $command): array
+{
+    $parts = preg_split('~(?:\'[^\']*\'|"[^"]*")(*SKIP)(*F)|\h+~', trim($command));
+    $parts = array_map(fn ($part) => preg_replace('/^(\'(.*)\'|"(.*)")$/', '$2$3', $part), $parts);
+    $plugin = basename((string) array_shift($parts));
+
+    // Options and their values (a following word that is not itself an option).
+    $options = [];
+    $secret = ['-a', '--authorization', '--password', '-p' => ['mysql', 'pgsql', 'mysql_query']];
+    $shown = [$plugin];
+    for ($i = 0; $i < count($parts); $i++) {
+        $part = $parts[$i];
+        if (! preg_match('/^(--?[A-Za-z][\w-]*)(?:=(.*))?$/', $part, $m)) {
+            $shown[] = $part;
+            continue;
+        }
+        $value = $m[2] ?? null;
+        if ($value === null && isset($parts[$i + 1]) && ! str_starts_with($parts[$i + 1], '-')) {
+            $value = $parts[++$i];
+        }
+        $options[$m[1]][] = $value ?? true;
+        $masked = in_array($m[1], ['-a', '--authorization', '--password'], true)
+            || ($m[1] === '-p' && in_array($type, $secret['-p'], true));
+        $shown[] = $value === null ? $m[1] : $m[1] . ' ' . ($masked ? '******' : escapeshellarg((string) $value));
+    }
+
+    $lines = ['Command: ' . implode(' ', $shown)];
+    $lines[] = 'Checked from: ' . gethostname();
+    if (in_array($type, ['snmp_extend', 'port_listen'], true)) {
+        $lines[] = 'Runs on the server itself, read over SNMP.';
+    }
+
+    $first = fn (string $key) => isset($options[$key]) && is_string($options[$key][0]) ? $options[$key][0] : null;
+    $last = fn (string $key) => isset($options[$key]) && is_string(end($options[$key])) ? end($options[$key]) : null;
+    $host = $first('-I') ?? $first('-H') ?? $first('--hostname');
+    $vhost = $last('-H') ?? $host;
+    if ($host === null) {
+        return $lines;
+    }
+
+    $address = $host;
+    if (! filter_var($host, FILTER_VALIDATE_IP)) {
+        $records = @gethostbynamel($host) ?: [];
+        $lines[] = "DNS: $host → " . ($records ? implode(', ', $records) : 'no address');
+        $address = $records[0] ?? null;
+    }
+    if ($vhost !== $host && ! filter_var($vhost, FILTER_VALIDATE_IP)) {
+        $records = @gethostbynamel($vhost) ?: [];
+        $lines[] = "DNS: $vhost → " . ($records ? implode(', ', $records) : 'no address');
+    }
+
+    if ($plugin === 'check_http' || $plugin === 'check_curl') {
+        $ssl = isset($options['-S']) || isset($options['--ssl']) || isset($options['--sni']);
+        $port = (int) ($first('-p') ?? $first('--port') ?? ($ssl ? 443 : 80));
+        $uri = $first('-u') ?? $first('--url') ?? '/';
+        $scheme = $ssl ? 'https' : 'http';
+        $url = "$scheme://$vhost:$port" . (str_starts_with($uri, '/') ? $uri : "/$uri");
+        $curl = ['curl', '-sv', '-o', '/dev/null', '-k', '--max-time', '10', '--max-redirs', '0'];
+        if ($first('-I') !== null && $vhost !== $first('-I')) {
+            // Like check_http -I: connect to that address, ask for the name.
+            $curl[] = '--connect-to';
+            $curl[] = "$vhost:$port:" . $first('-I') . ":$port";
+        }
+        $curl[] = $url;
+        $lines[] = '$ ' . implode(' ', array_map('escapeshellarg', $curl));
+        $process = proc_open($curl, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        if (is_resource($process)) {
+            stream_get_contents($pipes[1]);
+            $output = stream_get_contents($pipes[2]);
+            proc_close($process);
+            $keep = '/^\*\s+(Host |Trying|Connected to|Connecting to|SSL connection|ALPN: server|Server certificate|subject|start date|expire date|issuer|SSL certificate verify)|^> (GET|HEAD|Host:)|^< /i';
+            $count = 0;
+            foreach (preg_split('/\r?\n/', (string) $output) as $line) {
+                $line = rtrim($line);
+                if ($line !== '' && $line !== '<' && preg_match($keep, $line) && $count++ < 40) {
+                    $lines[] = $line;
+                }
+            }
+        }
+
+        return $lines;
+    }
+
+    $defaults = ['ssh' => 22, 'ftp' => 21, 'smtp' => 25, 'pop' => 110, 'imap' => 143, 'mysql' => 3306, 'pgsql' => 5432, 'tcp' => null];
+    // check_mysql and check_pgsql take the port as -P (-p is the password).
+    $port = in_array($type, ['mysql', 'pgsql'], true)
+        ? ($first('-P') ?? $defaults[$type])
+        : ($first('-p') ?? $first('--port') ?? ($defaults[$type] ?? null));
+    if ($address !== null && is_numeric($port) && $type !== 'udp') {
+        $started = microtime(true);
+        $target = (str_contains($address, ':') ? "[$address]" : $address) . ':' . (int) $port;
+        $socket = @stream_socket_client("tcp://$target", $errno, $error, 5);
+        if ($socket) {
+            $lines[] = sprintf('Connected to %s from %s in %.0f ms', stream_socket_get_name($socket, true),
+                stream_socket_get_name($socket, false), (microtime(true) - $started) * 1000);
+            fclose($socket);
+        } else {
+            $lines[] = "Could not connect to $target: $error";
+        }
+    }
+
+    return $lines;
+}
