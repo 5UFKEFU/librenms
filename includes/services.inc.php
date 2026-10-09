@@ -358,7 +358,7 @@ function service_diagnostics(string $type, string $command): array
             stream_get_contents($pipes[1]);
             $output = stream_get_contents($pipes[2]);
             proc_close($process);
-            $keep = '/^\*\s+(Host |Trying|Connected to|Connecting to|SSL connection|ALPN: server|Server certificate|subject|start date|expire date|issuer|SSL certificate verify)|^> (GET|HEAD|Host:)|^< /i';
+            $keep = '/^\*\s+(IPv4|IPv6|Trying|Connected to|Established connection|SSL connection|ALPN: server|Server certificate|subject|start date|expire date|issuer|SSL certificate verif)|^> (GET|HEAD|Host:)|^< /i';
             $count = 0;
             foreach (preg_split('/\r?\n/', (string) $output) as $line) {
                 $line = rtrim($line);
