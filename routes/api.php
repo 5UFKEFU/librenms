@@ -186,6 +186,12 @@ Route::prefix('v0')->group(function (): void {
             Route::post('{hostname}/maintenance', [App\Api\Controllers\LegacyApiController::class, 'maintenance_device'])->name('maintenance_device');
             Route::post('{id}/parents', [App\Api\Controllers\LegacyApiController::class, 'add_parents_to_host'])->name('add_parents_to_host');
             Route::delete('{id}/parents', [App\Api\Controllers\LegacyApiController::class, 'del_parents_from_host'])->name('del_parents_from_host');
+            // FebNMS: POST to a graph's URL clears a time window of its stored data.
+            Route::post('{hostname}/graphs/health/{type}/{sensor_id?}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_generic_by_hostname'])->name('erase_health_graph_data');
+            Route::post('{hostname}/ports/{ifname}/{type}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_by_port_hostname'])->name('erase_port_graph_data');
+            Route::post('{hostname}/services/{id}/graphs/{datasource}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_by_service'])->name('erase_service_graph_data');
+            Route::post('{hostname}/applications/{app_id}/graphs/{graph}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_by_application'])->name('erase_application_graph_data');
+            Route::post('{hostname}/{type}', [App\Api\Controllers\LegacyApiController::class, 'get_graph_generic_by_hostname'])->name('erase_graph_data');
         });
 
         Route::middleware('can:create,App\Models\Component')->group(function (): void {

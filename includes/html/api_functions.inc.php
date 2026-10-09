@@ -171,6 +171,29 @@ function api_get_graph(Request $request, array $additional = [])
             config(['librenms.graph_timezone' => $request->input('timezone')]);
         }
 
+        // POST to a graph's URL permanently clears a time window in the RRD
+        // files that graph draws (FebNMS: removing a bogus spike).
+        if ($request->isMethod('post')) {
+            $request->validate([
+                'erase_start' => 'required|integer|min:1',
+                'erase_end' => 'required|integer|gt:erase_start',
+            ]);
+            $options = Graph::getRrdOptions(['width' => 600, 'height' => 200, ...$additional, ...$vars]);
+            $start = (int) $request->input('erase_start');
+            $end = (int) $request->input('erase_end');
+            $results = [];
+            foreach (\LibreNMS\Data\Store\RrdRangeEraser::filesInOptions($options) as $file) {
+                try {
+                    $results[] = \LibreNMS\Data\Store\RrdRangeEraser::erase($file, $start, $end);
+                } catch (\RuntimeException $e) {
+                    $results[] = ['file' => $file, 'error' => $e->getMessage()];
+                }
+            }
+            \Illuminate\Support\Facades\Log::info('FebNMS cleared graph data', ['start' => $start, 'end' => $end, 'results' => $results]);
+
+            return api_success($results, 'results');
+        }
+
         $graph = Graph::get([
             'width' => $request->input('width', 1075),
             'height' => $request->input('height', 300),
