@@ -25,15 +25,21 @@ $nvidia_colours = [
     'dec' => ['059669', '064E3B'],    // decoder: emerald
 ];
 
+// A graph may combine metrics that share a unit: $rrdVars maps each
+// rrd variable to its legend label. Otherwise $rrdVar is drawn per GPU.
+$nvidia_vars = $rrdVars ?? [$rrdVar => null];
+
 while (Rrd::checkRrdExists($rrd_filename)) {
-    $shades = $nvidia_colours[$rrdVar] ?? null;
-    $rrd_list[] = [
-        'filename' => $rrd_filename,
-        'descr' => 'GPU ' . $int,
-        'ds' => $rrdVar,
-        'colour' => $shades[$int % 2] ?? null,
-        'area' => $shades !== null,
-    ];
+    foreach ($nvidia_vars as $nvidia_var => $nvidia_label) {
+        $shades = $nvidia_colours[$nvidia_var] ?? null;
+        $rrd_list[] = [
+            'filename' => $rrd_filename,
+            'descr' => $nvidia_label === null ? 'GPU ' . $int : ($int ? "GPU $int " : '') . $nvidia_label,
+            'ds' => $nvidia_var,
+            'colour' => $shades[$int % 2] ?? null,
+            'area' => $shades !== null,
+        ];
+    }
 
     $int++;
     $rrd_filename = Rrd::name($device['hostname'], ['app', $app->app_type, $app->app_id, $int]);

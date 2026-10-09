@@ -10,6 +10,7 @@ $divider ??= null;
 $dostack ??= null;
 $printtotal ??= 0;
 $total_units ??= '';
+$gprint_format ??= '%8.0lf%s';
 
 if ($width > '500') {
     $descr_len = $bigdescrlen;
@@ -106,10 +107,10 @@ foreach ($rrd_list as $rrd) {
     } else {
         $rrd_options[] = 'LINE2:' . $g_defname . $i . '#' . $colour . ':' . $descr . "$stack";
     }
-    $rrd_options[] = 'GPRINT:' . $t_defname . $i . ':LAST:%8.0lf%s';
-    $rrd_options[] = 'GPRINT:' . $t_defname . $i . 'min:MIN:%8.0lf%s';
-    $rrd_options[] = 'GPRINT:' . $t_defname . $i . 'max:MAX:%8.0lf%s';
-    $rrd_options[] = 'GPRINT:' . $t_defname . $i . ':AVERAGE:%8.0lf%s\\n';
+    $rrd_options[] = 'GPRINT:' . $t_defname . $i . ':LAST:' . $gprint_format;
+    $rrd_options[] = 'GPRINT:' . $t_defname . $i . 'min:MIN:' . $gprint_format;
+    $rrd_options[] = 'GPRINT:' . $t_defname . $i . 'max:MAX:' . $gprint_format;
+    $rrd_options[] = 'GPRINT:' . $t_defname . $i . ':AVERAGE:' . $gprint_format . '\\n';
 
     if ($printtotal === 1) {
         $rrd_options[] = 'GPRINT:tot' . $rrd['ds'] . $i . ':%6.2lf%s' . Rrd::safeDescr($total_units);
