@@ -107,6 +107,10 @@ class Graph
         $vars = is_string($vars) ? Url::parseLegacyPathVars($vars) : $vars;
         $graph_params = new GraphParameters($vars);
         $rrd_options = self::getRrdOptions($vars, $rrd_filename);
+        $rrd_options = \LibreNMS\Data\Graphing\GraphExclusion::apply(
+            $rrd_options,
+            \LibreNMS\Data\Graphing\GraphExclusion::parse($vars['exclude'] ?? null)
+        );
 
         // Generating the graph!
         try {

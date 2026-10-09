@@ -131,6 +131,8 @@ function api_get_graph(Request $request, array $additional = [])
         'traffic_style' => 'sometimes|in:default,cacti',
         'font_size' => 'sometimes|integer|between:6,16',
         'timezone' => 'sometimes|timezone:all',
+        // Time windows left out of the graph: "start-end,start-end" in unix seconds.
+        'exclude' => ['sometimes', 'string', 'max:300', 'regex:/^\\d{1,12}-\\d{1,12}(,\\d{1,12}-\\d{1,12})*$/'],
     ]);
 
     try {
@@ -160,6 +162,7 @@ function api_get_graph(Request $request, array $additional = [])
             'traffic_same_axis',
             'traffic_style',
             'font_size',
+            'exclude',
         ]);
 
         // API clients have no web session, so rrdtool would otherwise label the
